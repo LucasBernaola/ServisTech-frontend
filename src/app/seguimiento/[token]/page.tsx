@@ -87,9 +87,10 @@ async function fetchOrden(token: string): Promise<PublicOrden> {
 export default async function SeguimientoPage({
   params,
 }: {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }) {
-  const data = await fetchOrden(params.token);
+  const { token } = await params;
+  const data = await fetchOrden(token);
   const idx = estadoIndex(data.estado);
 
   const nombreCliente = `${(data.cliente?.nombre || "").trim()} ${(data.cliente?.apellido || "").trim()}`.trim();
