@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useRef } from "react"
 import { Portal } from "./Portal"
+import type { Cliente } from "@/types/orders"
 
 type Props = {
   apiBaseUrl: string
-  client: any
+  client: Cliente
   onClose: () => void
   onUpdated: () => void
 }
@@ -69,8 +70,8 @@ export default function EditClientModal({ apiBaseUrl, client, onClose, onUpdated
 
       onUpdated()
       onClose() // 🔥 UX clave: cerrar automáticamente
-    } catch (e: any) {
-      setError(e?.message || "Error actualizando cliente")
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Error actualizando cliente")
     } finally {
       setBusy(false)
     }

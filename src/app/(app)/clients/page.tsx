@@ -1,11 +1,12 @@
 import { cookies } from "next/headers"
 import ClientsClient from "./ClientsClient"
+import type { Cliente } from "@/types/orders"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
 
 type ClientesResponse = {
   count: number
-  results: any[]
+  results: Cliente[]
   next?: string | null
   previous?: string | null
 }

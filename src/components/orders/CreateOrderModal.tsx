@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { type CreateOrdenInput } from "@/lib/api/orders";
 import {
@@ -17,6 +18,8 @@ type CreateOrdenInputMoney = CreateOrdenInput & {
   presupuesto?: number | null;
   senia?: number | null;
 };
+
+const darkSelectStyle: CSSProperties = { colorScheme: "dark" };
 
 function parseArsToNumberOrNull(v: string) {
   const raw = (v ?? "").trim();
@@ -122,7 +125,10 @@ export function CreateOrderModal({
 
   if (!open) return null;
 
-  const set = (k: keyof CreateOrdenInputMoney, v: any) =>
+  const set = <K extends keyof CreateOrdenInputMoney>(
+    k: K,
+    v: CreateOrdenInputMoney[K],
+  ) =>
     setForm((p) => ({ ...p, [k]: v }));
 
   const submit = async () => {
@@ -151,8 +157,8 @@ export function CreateOrderModal({
         if (n < 3) throw new Error("El patrón debe tener al menos 3 puntos.");
       }
 
-      const p = (payload as any).presupuesto as number | null | undefined;
-      const s = (payload as any).senia as number | null | undefined;
+      const p = payload.presupuesto;
+      const s = payload.senia;
 
       if (p != null && p < 0)
         throw new Error("El presupuesto no puede ser negativo.");
@@ -173,8 +179,8 @@ export function CreateOrderModal({
 
       onClose();
       router.refresh();
-    } catch (e: any) {
-      setError(e?.message || "No se pudo crear la orden.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "No se pudo crear la orden.");
     } finally {
       setBusy(false);
     }
@@ -393,12 +399,12 @@ export function CreateOrderModal({
                   <select
                     value={form.bloqueo_tipo || "none"}
                     onChange={(e) => {
-                      const next = e.target.value;
+                      const next = e.target.value as CreateOrdenInputMoney["bloqueo_tipo"];
                       set("bloqueo_tipo", next);
                       if (next === "none") set("bloqueo_valor", "");
                     }}
                     className="w-full sm:w-auto rounded-xl border border-white/10 bg-[#0f172a] px-3 py-2.5 sm:py-2 text-sm text-white/85 outline-none focus:border-white/20"
-                    style={{ colorScheme: "dark" as any }}
+                    style={darkSelectStyle}
                   >
                     <option className="bg-[#0f172a] text-white" value="none">
                       Sin contraseña

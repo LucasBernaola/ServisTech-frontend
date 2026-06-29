@@ -15,18 +15,23 @@ type Profile = {
 };
 
 type EditableKey = "username" | "email" | "first_name" | "last_name";
+type ApiErrorBody = Record<string, unknown> & { detail?: unknown };
 
 function apiBase(): string {
   const base = process.env.NEXT_PUBLIC_API_URL || "";
   return base.replace(/\/+$/, "");
 }
 
-function normalizeError(err: any): string {
+function normalizeError(err: unknown): string {
   if (!err) return "Error inesperado.";
   if (typeof err === "string") return err;
-  if (err.detail) return String(err.detail);
 
-  const entries = Object.entries(err as Record<string, any>);
+  if (typeof err !== "object") return "Error inesperado.";
+
+  const body = err as ApiErrorBody;
+  if (body.detail) return String(body.detail);
+
+  const entries = Object.entries(body);
   if (!entries.length) return "Error inesperado.";
   return entries
     .map(([k, v]) =>
@@ -47,14 +52,14 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
   });
 
   if (!res.ok) {
-    let data: any = null;
+    let data: unknown = null;
     try {
       data = await res.json();
     } catch {}
     throw data || { detail: `HTTP ${res.status}` };
   }
 
-  if (res.status === 204) return null as any;
+  if (res.status === 204) return null as T;
   return (await res.json()) as T;
 }
 
@@ -130,11 +135,17 @@ function EditableInput(props: {
 
 function PasswordInput({
   label,
-  value,
+  value = "",
   onChange,
   readOnly,
   autoComplete,
-}: any) {
+}: {
+  label: string;
+  value?: string;
+  onChange?: (value: string) => void;
+  readOnly?: boolean;
+  autoComplete?: string;
+}) {
   const [show, setShow] = useState(false);
 
   return (
@@ -146,7 +157,7 @@ function PasswordInput({
           className="w-full rounded-xl px-3 py-2 pr-11 text-sm border bg-white/5"
           readOnly={readOnly}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onChange?.(e.target.value)}
           type={show ? "text" : "password"}
           autoComplete={autoComplete}
         />
@@ -197,6 +208,55 @@ export default function SettingsPage() {
     );
   }, [form, profile]);
 
+  async function saveProfile() {
+    setSaving(true);
+    setErr(null);
+    setMsg(null);
+
+    try {
+      const updated = await apiFetch<Profile>("/api/profile/", {
+        method: "PATCH",
+        body: JSON.stringify(form),
+      });
+      setProfile(updated);
+      setForm({
+        username: updated.username,
+        first_name: updated.first_name,
+        last_name: updated.last_name,
+        email: updated.email || "",
+      });
+      setEditable({
+        username: false,
+        email: false,
+        first_name: false,
+        last_name: false,
+      });
+      setMsg("Perfil actualizado.");
+    } catch (e: unknown) {
+      setErr(normalizeError(e));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function resetProfileForm() {
+    if (!profile) return;
+    setForm({
+      username: profile.username,
+      first_name: profile.first_name,
+      last_name: profile.last_name,
+      email: profile.email || "",
+    });
+    setEditable({
+      username: false,
+      email: false,
+      first_name: false,
+      last_name: false,
+    });
+    setMsg(null);
+    setErr(null);
+  }
+
   useEffect(() => {
     (async () => {
       try {
@@ -208,7 +268,7 @@ export default function SettingsPage() {
           last_name: data.last_name,
           email: data.email || "",
         });
-      } catch (e: any) {
+      } catch (e: unknown) {
         setErr(normalizeError(e));
       } finally {
         setLoading(false);
@@ -228,14 +288,25 @@ export default function SettingsPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <button className="btn btn-secondary w-full sm:w-auto">
+          <button
+            className="btn btn-secondary w-full sm:w-auto"
+            onClick={resetProfileForm}
+            disabled={!isDirty || saving}
+          >
             Cancelar
           </button>
-          <button className="btn btn-primary w-full sm:w-auto">
-            Guardar
+          <button
+            className="btn btn-primary w-full sm:w-auto"
+            onClick={saveProfile}
+            disabled={!isDirty || saving}
+          >
+            {saving ? "Guardando..." : "Guardar"}
           </button>
         </div>
       </div>
+
+      {msg ? <Alert type="success" text={msg} /> : null}
+      {err ? <Alert type="error" text={err} /> : null}
 
       {/* PERFIL */}
       <div className="card p-4 sm:p-6">

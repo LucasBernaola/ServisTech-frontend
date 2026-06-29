@@ -4,9 +4,14 @@ import { useEffect, useState } from "react";
 import { LoginModal } from "@/components/LoginModal";
 import { useRouter } from "next/navigation";
 
+type SessionUser = {
+  username?: string;
+  email?: string;
+};
+
 export default function PublicHome() {
   const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SessionUser | null>(null);
   const router = useRouter();
 
   useEffect(() => {

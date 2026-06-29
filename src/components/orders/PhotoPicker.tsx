@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
+import { Camera } from "lucide-react";
 
 function formatBytes(bytes: number) {
   const mb = bytes / (1024 * 1024);
@@ -70,7 +72,7 @@ export function PhotoPicker({
           más cómoda que el botón chico.
         */
         <label className="mt-3 flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/15 bg-black/20 p-6 text-center transition hover:border-white/25 hover:bg-black/30 active:bg-black/40">
-          <span className="text-2xl">📷</span>
+          <Camera className="h-7 w-7 text-white/45" />
           <span className="text-xs text-white/50">
             Sin fotos — tocá para agregar
           </span>
@@ -96,9 +98,12 @@ export function PhotoPicker({
                 key={`${f.name}-${i}`}
                 className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/20"
               >
-                <img
+                <Image
                   src={previews[i]}
                   alt={f.name}
+                  width={320}
+                  height={224}
+                  unoptimized
                   className="h-24 w-full object-cover sm:h-28"
                 />
 

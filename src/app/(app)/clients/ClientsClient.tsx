@@ -1,18 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ClientsTable from "@/components/ClientsTable";
 import CreateClientModal from "@/components/CreateClientModal";
-
-type Cliente = {
-  id: number;
-  nombre?: string;
-  apellido?: string;
-  dni?: string;
-  celular?: string;
-  email?: string;
-};
+import type { Cliente } from "@/types/orders";
 
 function isDigitsOnly(s: string) {
   const t = s.trim();
@@ -27,7 +19,7 @@ export default function ClientsClient({
   initialOrdering,
 }: {
   apiBaseUrl: string;
-  initialData: { count: number; results: any[] };
+  initialData: { count: number; results: Cliente[] };
   initialSearch: string;
   initialPage: number;
   initialOrdering: string;
@@ -73,16 +65,16 @@ export default function ClientsClient({
     return Math.max(1, Math.ceil((initialData?.count || 0) / pageSize));
   }, [initialData?.count]);
 
-  function replaceParams(
+  const replaceParams = useCallback((
     next: Record<string, string | number | null | undefined>,
-  ) {
+  ) => {
     const nextParams = new URLSearchParams(sp.toString());
     Object.entries(next).forEach(([k, v]) => {
       if (v === null || v === undefined || v === "") nextParams.delete(k);
       else nextParams.set(k, String(v));
     });
     router.replace(`/clients?${nextParams.toString()}`);
-  }
+  }, [router, sp]);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -104,7 +96,7 @@ export default function ClientsClient({
     }, 300);
 
     return () => clearTimeout(t);
-  }, [searchValue, ordering]);
+  }, [searchValue, ordering, replaceParams]);
 
   // Autocomplete
   useEffect(() => {

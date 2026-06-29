@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import type { Orden, OrdenEstado } from "@/types/orders";
 import { ViewOrderModal } from "./orders/ViewOrderModal";
@@ -13,6 +14,10 @@ const ESTADOS: { value: OrdenEstado; label: string }[] = [
   { value: "finalizado", label: "Finalizado" },
   { value: "retirado", label: "Retirado" },
 ];
+
+type GarantiaTipo = "monto" | "porcentaje";
+
+const darkSelectStyle: CSSProperties = { colorScheme: "dark" };
 
 function formatDate(iso: string | null | undefined) {
   if (!iso) return "—";
@@ -111,7 +116,7 @@ async function patchOrdenEstado(opts: {
   apiBaseUrl?: string;
   id: number;
   estado: OrdenEstado;
-  payload?: Record<string, any>;
+  payload?: Record<string, unknown>;
 }) {
   if (!opts.apiBaseUrl)
     throw new Error("Falta apiBaseUrl para actualizar el estado.");
@@ -288,9 +293,8 @@ function OrderStatusWizardModal({
   const [costoFinal, setCostoFinal] = React.useState<string>("");
 
   const [garantiaDescuento, setGarantiaDescuento] = React.useState<string>("0");
-  const [garantiaTipo, setGarantiaTipo] = React.useState<
-    "monto" | "porcentaje"
-  >("monto");
+  const [garantiaTipo, setGarantiaTipo] =
+    React.useState<GarantiaTipo>("monto");
   const [garantiaPorcentaje, setGarantiaPorcentaje] =
     React.useState<string>("0");
 
@@ -313,22 +317,22 @@ function OrderStatusWizardModal({
     setCurrentIndex(idx);
     setStep(idx);
 
-    const p0 = coerceMoneyToNumber((orden as any).presupuesto);
-    const s0 = coerceMoneyToNumber((orden as any).senia);
-    const c0 = coerceMoneyToNumber((orden as any).costo_final);
-    const gd0 = coerceMoneyToNumber((orden as any).garantia_descuento);
+    const p0 = coerceMoneyToNumber(orden.presupuesto);
+    const s0 = coerceMoneyToNumber(orden.senia);
+    const c0 = coerceMoneyToNumber(orden.costo_final);
+    const gd0 = coerceMoneyToNumber(orden.garantia_descuento);
 
     setPresupuesto(p0 != null ? formatArsInput(p0) : "");
     setSenia(s0 != null ? formatArsInput(s0) : "");
     setCostoFinal(c0 != null ? formatArsInput(c0) : "");
 
     setGarantiaDescuento(gd0 != null ? formatArsInput(gd0) : "0");
-    setGarantiaDias(String((orden as any).garantia_dias ?? 0));
-    setObsFinales(String((orden as any).observaciones_finales ?? ""));
+    setGarantiaDias(String(orden.garantia_dias ?? 0));
+    setObsFinales(String(orden.observaciones_finales ?? ""));
 
-    setRetiradoPorNombre(String((orden as any).retirado_por_nombre ?? ""));
-    setRetiradoPorDni(String((orden as any).retirado_por_dni ?? ""));
-    setObservacionesRetiro(String((orden as any).observaciones_retiro ?? ""));
+    setRetiradoPorNombre(String(orden.retirado_por_nombre ?? ""));
+    setRetiradoPorDni(String(orden.retirado_por_dni ?? ""));
+    setObservacionesRetiro(String(orden.observaciones_retiro ?? ""));
 
     setGarantiaTipo("monto");
     setGarantiaPorcentaje("0");
@@ -512,8 +516,10 @@ function OrderStatusWizardModal({
         setCurrentIndex(step);
         router.refresh();
         onApplied();
-      } catch (e: any) {
-        setError(e?.message || "No se pudo actualizar el estado.");
+      } catch (e: unknown) {
+        setError(
+          e instanceof Error ? e.message : "No se pudo actualizar el estado.",
+        );
       }
       return;
     }
@@ -540,8 +546,8 @@ function OrderStatusWizardModal({
       setConfirmRollback(false);
       router.refresh();
       onApplied();
-    } catch (e: any) {
-      setError(e?.message || "No se pudo revertir el estado.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "No se pudo revertir el estado.");
     }
   };
 
@@ -628,9 +634,11 @@ function OrderStatusWizardModal({
               <div className="flex flex-col sm:flex-row gap-2">
                 <select
                   value={garantiaTipo}
-                  onChange={(e) => setGarantiaTipo(e.target.value as any)}
+                  onChange={(e) =>
+                    setGarantiaTipo(e.target.value as GarantiaTipo)
+                  }
                   className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/85 outline-none focus:border-white/20"
-                  style={{ colorScheme: "dark" as any }}
+                  style={darkSelectStyle}
                 >
                   <option className="bg-[#0f172a] text-white" value="monto">
                     $ Monto
@@ -965,7 +973,6 @@ export function OrdersTable({
   onView?: (ordenId: number) => void;
 }) {
   const router = useRouter();
-  const [error, setError] = React.useState<string | null>(null);
 
   const [wizardOpen, setWizardOpen] = React.useState(false);
   const [wizardOrden, setWizardOrden] = React.useState<Orden | null>(null);
@@ -1000,12 +1007,6 @@ export function OrdersTable({
 
   return (
     <div className="p-4 md:p-5">
-      {error ? (
-        <div className="mb-3 rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
-          {error}
-        </div>
-      ) : null}
-
       {!apiBaseUrl ? (
         <div className="mb-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
           Nota: faltó <b>apiBaseUrl</b> en esta vista. Se deshabilita el cambio

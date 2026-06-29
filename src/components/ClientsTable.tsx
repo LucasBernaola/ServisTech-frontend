@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import EditClientModal from "./EditClientModal";
+import type { Cliente } from "@/types/orders";
 
 type Props = {
   apiBaseUrl: string;
-  rows: any[];
+  rows: Cliente[];
   count: number;
   page: number;
   totalPages: number;
@@ -55,7 +56,7 @@ export default function ClientsTable({
   onPageChange,
   onRefresh,
 }: Props) {
-  const [edit, setEdit] = useState<any | null>(null);
+  const [edit, setEdit] = useState<Cliente | null>(null);
 
   return (
     <div>

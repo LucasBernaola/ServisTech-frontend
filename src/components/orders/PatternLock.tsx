@@ -67,7 +67,7 @@ export function PatternLock({ value, onChange, disabled, size = 260 }: Props) {
       }
     }
     return arr;
-  }, [canvasSize, step]);
+  }, [step]);
 
   const getLocalPoint = (e: PointerEvent | React.PointerEvent): Pt | null => {
     const el = ref.current;

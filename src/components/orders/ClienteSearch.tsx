@@ -49,8 +49,10 @@ export function ClienteSearch({
           pageSize: 7,
         });
         if (!cancelled) setItems(res);
-      } catch (e: any) {
-        if (!cancelled) setError(e?.message || "Error buscando clientes");
+      } catch (e: unknown) {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Error buscando clientes");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }

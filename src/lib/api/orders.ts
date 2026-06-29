@@ -1,5 +1,5 @@
 import { serverFetch } from "@/lib/api/serverFetch";
-import type { Orden, OrdenEstado } from "@/types/orders";
+import type { Orden } from "@/types/orders";
 
 export type Paginated<T> = {
   count: number;

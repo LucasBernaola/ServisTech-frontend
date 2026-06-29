@@ -2,6 +2,7 @@
 "use client";
 
 import React from "react";
+import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { Portal } from "@/components/Portal";
 import { ClienteSearch } from "@/components/orders/ClienteSearch";
@@ -9,7 +10,7 @@ import { PatternLock } from "@/components/orders/PatternLock";
 import { PhotoPicker } from "@/components/orders/PhotoPicker";
 
 import type { Cliente } from "@/lib/api/clients.client";
-import type { Orden } from "@/types/orders";
+import type { Orden, OrdenBloqueoTipo, OrdenFoto } from "@/types/orders";
 import type { CreateOrdenInput } from "@/lib/api/orders";
 
 import {
@@ -20,8 +21,7 @@ import {
   uploadOrdenFotosClient,
 } from "@/lib/api/orders.client";
 
-type FotoObj = Record<string, any>;
-type OrdenFotoLike = string | FotoObj;
+type OrdenFotoLike = string | OrdenFoto;
 
 type CreateOrdenInputMoney = CreateOrdenInput & {
   presupuesto?: number | null;
@@ -78,19 +78,18 @@ function joinUrl(base: string, pathOrUrl: string) {
 function resolveFotoSrc(apiBaseUrl: string, foto: OrdenFotoLike): string {
   if (!foto) return "";
   if (typeof foto === "string") return joinUrl(apiBaseUrl, foto);
-  const f: FotoObj = foto;
   const direct =
-    f.imagen ??
-    f.imagen_url ??
-    f.image ??
-    f.image_url ??
-    f.url ??
-    f.public_url ??
-    f.file_url ??
-    f.src;
+    foto.imagen ??
+    foto.imagen_url ??
+    foto.image ??
+    foto.image_url ??
+    foto.url ??
+    foto.public_url ??
+    foto.file_url ??
+    foto.src;
   if (typeof direct === "string" && direct.trim())
     return joinUrl(apiBaseUrl, direct);
-  const path = f.path ?? f.ruta ?? f.file_path ?? f.filePath;
+  const path = foto.path ?? foto.ruta ?? foto.file_path ?? foto.filePath;
   if (typeof path === "string" && path.trim()) return joinUrl(apiBaseUrl, path);
   return "";
 }
@@ -98,13 +97,13 @@ function resolveFotoSrc(apiBaseUrl: string, foto: OrdenFotoLike): string {
 function resolveFotoDesc(foto: OrdenFotoLike): string {
   if (!foto) return "";
   if (typeof foto === "string") return "";
-  const f: FotoObj = foto;
-  return (f.descripcion ?? f.description ?? f.desc ?? "").trim();
+  return (foto.descripcion ?? foto.description ?? foto.desc ?? "").trim();
 }
 
 // Clases compartidas
 const inputCls =
   "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 sm:py-2 text-sm text-white/85 outline-none focus:border-white/20 disabled:opacity-50 placeholder:text-white/35";
+const darkSelectStyle: CSSProperties = { colorScheme: "dark" };
 
 export function ViewOrderModal({
   open,
@@ -144,7 +143,10 @@ export function ViewOrderModal({
     senia: null,
   });
 
-  const set = (k: keyof CreateOrdenInputMoney, v: any) =>
+  const set = <K extends keyof CreateOrdenInputMoney>(
+    k: K,
+    v: CreateOrdenInputMoney[K],
+  ) =>
     setForm((p) => ({ ...p, [k]: v }));
 
   const loadOrden = React.useCallback(async () => {
@@ -157,27 +159,27 @@ export function ViewOrderModal({
     try {
       const o = await getOrdenClient(apiBaseUrl, ordenId);
       setOrden(o);
-      const c = (o as any).cliente as Cliente | undefined;
+      const c = o.cliente as Cliente | null | undefined;
       setClienteSel(c ?? null);
-      const p0 = coerceMoneyToNumber((o as any).presupuesto);
-      const s0 = coerceMoneyToNumber((o as any).senia);
+      const p0 = coerceMoneyToNumber(o.presupuesto);
+      const s0 = coerceMoneyToNumber(o.senia);
       setForm({
-        dispositivo_tipo: (o as any).dispositivo_tipo ?? "Celular",
-        marca: (o as any).marca ?? "",
-        modelo: (o as any).modelo ?? "",
-        imei_serial: (o as any).imei_serial ?? "",
-        falla_reportada: (o as any).falla_reportada ?? "",
-        condicion_equipo: (o as any).condicion_equipo ?? "",
-        accesorios_entregados: (o as any).accesorios_entregados ?? "",
-        observaciones: (o as any).observaciones ?? "",
-        bloqueo_tipo: ((o as any).bloqueo_tipo ?? "none") as any,
-        bloqueo_valor: (o as any).bloqueo_valor ?? "",
+        dispositivo_tipo: o.dispositivo_tipo ?? "Celular",
+        marca: o.marca ?? "",
+        modelo: o.modelo ?? "",
+        imei_serial: o.imei_serial ?? "",
+        falla_reportada: o.falla_reportada ?? "",
+        condicion_equipo: o.condicion_equipo ?? "",
+        accesorios_entregados: o.accesorios_entregados ?? "",
+        observaciones: o.observaciones ?? "",
+        bloqueo_tipo: o.bloqueo_tipo ?? "none",
+        bloqueo_valor: o.bloqueo_valor ?? "",
         cliente_id: c?.id ?? null,
         presupuesto: p0,
         senia: s0,
       });
-    } catch (e: any) {
-      setError(e?.message || "No se pudo cargar la orden.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "No se pudo cargar la orden.");
     } finally {
       setLoading(false);
     }
@@ -203,15 +205,14 @@ export function ViewOrderModal({
   }, [open]);
 
   const fotosExistentes = React.useMemo(() => {
-    const o: any = orden as any;
-    const list = Array.isArray(o?.fotos) ? (o.fotos as OrdenFotoLike[]) : [];
+    const list = Array.isArray(orden?.fotos) ? orden.fotos : [];
     return list
       .map((f, idx) => {
         const src = resolveFotoSrc(apiBaseUrl, f);
         const desc = resolveFotoDesc(f);
         const key =
-          (typeof f === "object" && f && (f.id ?? f.uuid)) != null
-            ? String((f as any).id ?? (f as any).uuid)
+          typeof f !== "string" && (f.id ?? f.uuid) != null
+            ? String(f.id ?? f.uuid)
             : `${src || "foto"}-${idx}`;
         return { key, src, desc };
       })
@@ -274,8 +275,8 @@ export function ViewOrderModal({
 
       await loadOrden();
       router.refresh();
-    } catch (e: any) {
-      setError(e?.message || "No se pudo guardar la orden.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "No se pudo guardar la orden.");
     } finally {
       setBusy(false);
     }
@@ -330,7 +331,7 @@ export function ViewOrderModal({
                     <>
                       Estado:{" "}
                       <b>
-                        {(orden as any).estado_display || (orden as any).estado}
+                        {orden.estado_display || orden.estado}
                       </b>
                     </>
                   ) : (
@@ -553,12 +554,12 @@ export function ViewOrderModal({
                     <select
                       value={form.bloqueo_tipo || "none"}
                       onChange={(e) => {
-                        const next = e.target.value as any;
+                        const next = e.target.value as OrdenBloqueoTipo;
                         set("bloqueo_tipo", next);
                         if (next === "none") set("bloqueo_valor", "");
                       }}
                       className="w-full sm:w-auto rounded-xl border border-white/10 bg-[#0f172a] px-3 py-2.5 sm:py-2 text-sm text-white/85 outline-none focus:border-white/20"
-                      style={{ colorScheme: "dark" as any }}
+                      style={darkSelectStyle}
                       disabled={busy}
                     >
                       <option className="bg-[#0f172a] text-white" value="none">

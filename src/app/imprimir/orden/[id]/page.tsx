@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useParams } from "next/navigation";
+import type { Orden } from "@/types/orders";
 
 type OrdenEstado =
   | "pendiente"
@@ -84,7 +85,7 @@ export default function PrintOrdenPage() {
   const apiBase = process.env.NEXT_PUBLIC_API_URL!;
   const siteBase = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-  const [data, setData] = React.useState<any>(null);
+  const [data, setData] = React.useState<Orden | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState<boolean>(true);
 
@@ -106,7 +107,9 @@ export default function PrintOrdenPage() {
         return r.json();
       })
       .then(setData)
-      .catch((e) => setError(e?.message || "No se pudo cargar la orden."))
+      .catch((e: unknown) =>
+        setError(e instanceof Error ? e.message : "No se pudo cargar la orden."),
+      )
       .finally(() => setLoading(false));
   }, [id, apiBase]);
 

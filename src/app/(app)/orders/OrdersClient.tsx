@@ -41,7 +41,7 @@ export function OrdersClient({
 
   const totalPages = Math.max(1, Math.ceil(count / pageSize));
 
-  const pushParams = (next: {
+  const pushParams = React.useCallback((next: {
     tab?: string;
     search?: string;
     page?: string;
@@ -65,11 +65,11 @@ export function OrdersClient({
 
     const qs = p.toString();
     router.push(qs ? `${pathname}?${qs}` : pathname);
-  };
+  }, [pathname, router, sp]);
 
   React.useEffect(() => {
     pushParams({ search: debounced, page: "1" });
-  }, [debounced]);
+  }, [debounced, pushParams]);
 
   const onTab = (k: string) => {
     setTab(k);

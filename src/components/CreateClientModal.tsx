@@ -47,8 +47,8 @@ export default function CreateClientModal({ apiBaseUrl, onClose, onCreated }: Pr
       }
 
       onCreated()
-    } catch (e: any) {
-      setError(e?.message || "Error creando cliente")
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Error creando cliente")
     } finally {
       setBusy(false)
     }
