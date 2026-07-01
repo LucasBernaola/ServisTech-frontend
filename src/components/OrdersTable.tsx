@@ -4,6 +4,12 @@ import React from "react";
 import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "@/lib/api/http";
+import {
+  coerceMoneyToNumber,
+  formatArsDisplay,
+  formatArsInput,
+  parseArsToNumberOrNull,
+} from "@/lib/orders/money";
 import type { Orden, OrdenEstado } from "@/types/orders";
 import { ViewOrderModal } from "./orders/ViewOrderModal";
 
@@ -28,60 +34,6 @@ function formatDate(iso: string | null | undefined) {
     year: "numeric",
     month: "short",
     day: "2-digit",
-  });
-}
-
-function parseArsToNumberOrNull(v: string) {
-  const raw = (v ?? "").trim();
-  if (!raw) return null;
-
-  const cleaned = raw
-    .replace(/\s/g, "")
-    .replace(/\$/g, "")
-    .replace(/\.?-$/, "")
-    .replace(/\.-$/, "");
-
-  if (!cleaned) return null;
-
-  const normalized = cleaned.replace(/\./g, "").replace(",", ".");
-  const n = Number(normalized);
-  return Number.isFinite(n) ? n : null;
-}
-
-function coerceMoneyToNumber(v: unknown): number | null {
-  if (v === null || v === undefined) return null;
-  if (typeof v === "number") return Number.isFinite(v) ? v : null;
-
-  if (typeof v === "string") {
-    const s = v.trim();
-    if (!s) return null;
-
-    const nDirect = Number(s);
-    if (Number.isFinite(nDirect)) return nDirect;
-
-    return parseArsToNumberOrNull(s);
-  }
-
-  return null;
-}
-
-function formatArsDisplay(n: number) {
-  const isInt = Math.abs(n % 1) < 1e-9;
-  if (isInt) {
-    return `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}.-`;
-  }
-  return `$${n.toLocaleString("es-AR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
-function formatArsInput(n: number) {
-  const isInt = Math.abs(n % 1) < 1e-9;
-  if (isInt) return n.toLocaleString("es-AR", { maximumFractionDigits: 0 });
-  return n.toLocaleString("es-AR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
   });
 }
 

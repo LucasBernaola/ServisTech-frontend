@@ -8,6 +8,10 @@ import { Portal } from "@/components/Portal";
 import { ClienteSearch } from "@/components/orders/ClienteSearch";
 import { PatternLock } from "@/components/orders/PatternLock";
 import { PhotoPicker } from "@/components/orders/PhotoPicker";
+import {
+  coerceMoneyToNumber,
+  formatArsDisplay,
+} from "@/lib/orders/money";
 
 import type { Cliente } from "@/lib/api/clients.client";
 import type { Orden, OrdenBloqueoTipo, OrdenFoto } from "@/types/orders";
@@ -27,44 +31,6 @@ type CreateOrdenInputMoney = CreateOrdenInput & {
   presupuesto?: number | null;
   senia?: number | null;
 };
-
-function parseArsToNumberOrNull(v: string) {
-  const raw = (v ?? "").trim();
-  if (!raw) return null;
-  const cleaned = raw
-    .replace(/\s/g, "")
-    .replace(/\$/g, "")
-    .replace(/\.?-$/, "")
-    .replace(/\.-$/, "");
-  if (!cleaned) return null;
-  const normalized = cleaned.replace(/\./g, "").replace(",", ".");
-  const n = Number(normalized);
-  return Number.isFinite(n) ? n : null;
-}
-
-function coerceMoneyToNumber(v: unknown): number | null {
-  if (v === null || v === undefined) return null;
-  if (typeof v === "number") return Number.isFinite(v) ? v : null;
-  if (typeof v === "string") {
-    const s = v.trim();
-    if (!s) return null;
-    const nDirect = Number(s);
-    if (Number.isFinite(nDirect)) return nDirect;
-    return parseArsToNumberOrNull(s);
-  }
-  return null;
-}
-
-function formatArsDisplay(n: number) {
-  const isInt = Math.abs(n % 1) < 1e-9;
-  if (isInt) {
-    return `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}.-`;
-  }
-  return `$${n.toLocaleString("es-AR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
 
 function joinUrl(base: string, pathOrUrl: string) {
   const p = (pathOrUrl || "").trim();

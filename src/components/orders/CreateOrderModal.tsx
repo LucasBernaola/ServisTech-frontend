@@ -8,6 +8,11 @@ import {
   createOrdenClient,
   uploadOrdenFotosClient,
 } from "@/lib/api/orders.client";
+import {
+  formatArsDisplay,
+  formatArsInput,
+  parseArsToNumberOrNull,
+} from "@/lib/orders/money";
 import { Portal } from "@/components/Portal";
 import { PatternLock } from "@/components/orders/PatternLock";
 import { PhotoPicker } from "@/components/orders/PhotoPicker";
@@ -20,42 +25,6 @@ type CreateOrdenInputMoney = CreateOrdenInput & {
 };
 
 const darkSelectStyle: CSSProperties = { colorScheme: "dark" };
-
-function parseArsToNumberOrNull(v: string) {
-  const raw = (v ?? "").trim();
-  if (!raw) return null;
-  const cleaned = raw
-    .replace(/\s/g, "")
-    .replace(/\$/g, "")
-    .replace(/\.?-$/, "")
-    .replace(/\.-$/, "");
-  if (!cleaned) return null;
-  const normalized = cleaned.replace(/\./g, "").replace(",", ".");
-  const n = Number(normalized);
-  return Number.isFinite(n) ? n : null;
-}
-
-function formatArsDisplay(n: number) {
-  const isInt = Math.abs(n % 1) < 1e-9;
-  if (isInt) {
-    return `$${n.toLocaleString("es-AR", { maximumFractionDigits: 0 })}.-`;
-  }
-  return `$${n.toLocaleString("es-AR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
-function formatArsInput(n: number) {
-  const isInt = Math.abs(n % 1) < 1e-9;
-  if (isInt) {
-    return n.toLocaleString("es-AR", { maximumFractionDigits: 0 });
-  }
-  return n.toLocaleString("es-AR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
 
 // Clases compartidas para inputs y textareas
 const inputCls =
