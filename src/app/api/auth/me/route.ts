@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { parseApiResponse } from "@/lib/api/http";
+import { apiUrl } from "@/lib/config";
 
 export async function GET() {
   const cookieStore = await cookies();
@@ -11,7 +11,7 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const res = await fetch(`${API_URL}/api/profile/`, {
+  const res = await fetch(apiUrl("/api/profile/"), {
     method: "GET",
     headers: {
       Authorization: `Bearer ${access}`,
@@ -19,10 +19,10 @@ export async function GET() {
     cache: "no-store",
   });
 
-  if (!res.ok) {
-    return NextResponse.json({ error: "Token inválido" }, { status: 401 });
+  try {
+    const data = await parseApiResponse<unknown>(res);
+    return NextResponse.json(data);
+  } catch {
+    return NextResponse.json({ error: "Token invalido" }, { status: 401 });
   }
-
-  const data = await res.json();
-  return NextResponse.json(data);
 }

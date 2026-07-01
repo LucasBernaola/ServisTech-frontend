@@ -1,22 +1,32 @@
 import { serverFetch } from "@/lib/api/serverFetch";
+import type { Paginated } from "@/lib/api/clients";
 import type { Orden } from "@/types/orders";
 
-export type Paginated<T> = {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
-};
+export async function getOrdenes(params: {
+  page?: string;
+  tab?: string;
+  search?: string;
+}) {
+  const qs = new URLSearchParams();
+  if (params.page) qs.set("page", params.page);
+  if (params.tab && params.tab !== "todas") qs.set("tab", params.tab);
+  if (params.search) qs.set("search", params.search);
 
-export async function getOrdenes(params: { page?: string; tab?: string; search?: string }) {
-  const usp = new URLSearchParams();
-  if (params.page) usp.set("page", params.page);
-  if (params.tab && params.tab !== "todas") usp.set("tab", params.tab);
-  if (params.search) usp.set("search", params.search);
+  const res = await serverFetch(`/api/ordenes/?${qs.toString()}`);
 
-  const r = await serverFetch(`/api/ordenes/?${usp.toString()}`);
-  if (!r.ok) throw new Error(`Error cargando órdenes (${r.status})`);
-  return (await r.json()) as Paginated<Orden>;
+  if (!res.ok) throw new Error(`Error cargando ordenes (${res.status})`);
+  return (await res.json()) as Paginated<Orden>;
+}
+
+export async function getOrdenesRecent(limit = 5) {
+  const res = await serverFetch("/api/ordenes/");
+
+  if (!res.ok) throw new Error("Error cargando ordenes");
+
+  const data = (await res.json()) as Paginated<Orden> | Orden[];
+  const results = Array.isArray(data) ? data : data.results || [];
+
+  return { count: results.length, results: results.slice(0, limit) };
 }
 
 export type CreateOrdenInput = {
@@ -31,19 +41,19 @@ export type CreateOrdenInput = {
   observaciones?: string;
   bloqueo_tipo?: "none" | "pin" | "texto" | "patron";
   bloqueo_valor?: string;
-  // estado no lo mandamos: backend default pendiente
 };
 
 export async function createOrden(data: CreateOrdenInput) {
-  const r = await serverFetch(`/api/ordenes/`, {
+  const res = await serverFetch("/api/ordenes/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 
-  if (!r.ok) {
-    const txt = await r.text().catch(() => "");
-    throw new Error(txt || `Error ${r.status}`);
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `Error ${res.status}`);
   }
-  return (await r.json()) as Orden;
+
+  return (await res.json()) as Orden;
 }

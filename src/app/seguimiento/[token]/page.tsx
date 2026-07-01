@@ -1,5 +1,6 @@
 import React from "react";
 import { notFound } from "next/navigation";
+import { serverFetch } from "@/lib/api/serverFetch";
 
 type PublicOrden = {
   orden_id: number;
@@ -71,12 +72,7 @@ function formatDateTime(iso?: string | null) {
 }
 
 async function fetchOrden(token: string): Promise<PublicOrden> {
-  const base = process.env.NEXT_PUBLIC_API_URL;
-  if (!base) throw new Error("Falta NEXT_PUBLIC_API_URL");
-
-  const res = await fetch(`${base}/api/public/orden/${token}/`, {
-    cache: "no-store",
-  });
+  const res = await serverFetch(`/api/public/orden/${token}/`);
 
   if (res.status === 404) notFound();
   if (!res.ok) throw new Error(`Error ${res.status}`);

@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { Portal } from "./Portal"
 import type { Cliente } from "@/types/orders"
+import { apiRequest, getErrorMessage } from "@/lib/api/http"
 
 type Props = {
   apiBaseUrl: string
@@ -52,26 +53,16 @@ export default function EditClientModal({ apiBaseUrl, client, onClose, onUpdated
     setError(null)
 
     try {
-      const res = await fetch(`${apiBaseUrl}/api/clientes/${client.id}/`, {
+      await apiRequest(`/api/clientes/${client.id}/`, {
+        apiBaseUrl,
         method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       })
-
-      if (!res.ok) {
-        let msg = "Error actualizando cliente"
-        try {
-          const data = await res.json()
-          msg = data?.detail || JSON.stringify(data)
-        } catch {}
-        throw new Error(msg)
-      }
 
       onUpdated()
       onClose() // 🔥 UX clave: cerrar automáticamente
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Error actualizando cliente")
+      setError(getErrorMessage(e, "Error actualizando cliente"))
     } finally {
       setBusy(false)
     }

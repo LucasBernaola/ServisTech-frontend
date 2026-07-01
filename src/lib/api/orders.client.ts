@@ -1,24 +1,16 @@
-// src/lib/api/orders.client.ts
-import type { Orden } from "@/types/orders";
+import { apiRequest } from "@/lib/api/http";
 import type { CreateOrdenInput } from "@/lib/api/orders";
+import type { Orden } from "@/types/orders";
 
 export async function createOrdenClient(
   apiBaseUrl: string,
-  data: CreateOrdenInput
+  data: CreateOrdenInput,
 ) {
-  const r = await fetch(`${apiBaseUrl}/api/ordenes/`, {
+  return apiRequest<Orden>("/api/ordenes/", {
+    apiBaseUrl,
     method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-
-  if (!r.ok) {
-    const txt = await r.text().catch(() => "");
-    throw new Error(txt || `Error ${r.status}`);
-  }
-
-  return (await r.json()) as Orden;
 }
 
 export async function uploadOrdenFotosClient(opts: {
@@ -28,72 +20,39 @@ export async function uploadOrdenFotosClient(opts: {
   descripcion?: string;
 }) {
   const fd = new FormData();
-  for (const f of opts.files) fd.append("imagen", f);
+  for (const file of opts.files) fd.append("imagen", file);
   if (opts.descripcion) fd.append("descripcion", opts.descripcion);
 
-  const r = await fetch(
-    `${opts.apiBaseUrl}/api/ordenes/${opts.ordenId}/fotos/`,
-    {
-      method: "POST",
-      credentials: "include",
-      body: fd,
-    }
-  );
-
-  if (!r.ok) {
-    const txt = await r.text().catch(() => "");
-    throw new Error(txt || `Error ${r.status}`);
-  }
-
-  return r.json();
+  return apiRequest<unknown>(`/api/ordenes/${opts.ordenId}/fotos/`, {
+    apiBaseUrl: opts.apiBaseUrl,
+    method: "POST",
+    body: fd,
+  });
 }
 
 export async function getOrdenClient(apiBaseUrl: string, ordenId: number) {
-  const r = await fetch(`${apiBaseUrl}/api/ordenes/${ordenId}/`, {
-    credentials: "include",
+  return apiRequest<Orden>(`/api/ordenes/${ordenId}/`, {
+    apiBaseUrl,
     cache: "no-store",
   });
-
-  if (!r.ok) {
-    const txt = await r.text().catch(() => "");
-    throw new Error(txt || `Error ${r.status}`);
-  }
-
-  return (await r.json()) as Orden;
 }
 
 export async function patchOrdenClient(
   apiBaseUrl: string,
   ordenId: number,
-  data: Partial<CreateOrdenInput>
+  data: Partial<CreateOrdenInput>,
 ) {
-  const r = await fetch(`${apiBaseUrl}/api/ordenes/${ordenId}/`, {
+  return apiRequest<Orden>(`/api/ordenes/${ordenId}/`, {
+    apiBaseUrl,
     method: "PATCH",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-
-  if (!r.ok) {
-    const txt = await r.text().catch(() => "");
-    throw new Error(txt || `Error ${r.status}`);
-  }
-
-  return (await r.json()) as Orden;
 }
 
-/**
- * ✅ IMPRESIONES (FRONTEND)
- * OJO: NO deben usar apiBaseUrl.
- * Son rutas de Next, porque la impresión es 100% en frontend.
- */
-
-// Orden imprimible para el cliente (QR + seguimiento)
 export function printSeguimientoUrl(_apiBaseUrl: string, ordenId: number) {
   return `/imprimir/orden/${ordenId}`;
 }
 
-// Ficha técnica interna imprimible (etiqueta)
 export function printFichaUrl(_apiBaseUrl: string, ordenId: number) {
   return `/imprimir/ficha/${ordenId}`;
 }

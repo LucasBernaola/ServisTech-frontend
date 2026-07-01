@@ -1,18 +1,14 @@
-// lib/api/serverFetch.ts
 import { cookies } from "next/headers";
+import { apiUrl } from "@/lib/config";
 
 export async function serverFetch(path: string, init?: RequestInit) {
   const cookieStore = await cookies();
-  const cookieHeader = cookieStore.toString(); // reenvía todas las cookies
 
-  const base = process.env.NEXT_PUBLIC_API_URL!;
-  const url = path.startsWith("http") ? path : `${base}${path}`;
-
-  return fetch(url, {
+  return fetch(apiUrl(path), {
     ...init,
     headers: {
       ...(init?.headers || {}),
-      cookie: cookieHeader,
+      cookie: cookieStore.toString(),
     },
     cache: "no-store",
   });

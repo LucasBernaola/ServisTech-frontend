@@ -2,6 +2,8 @@
 
 import React from "react";
 import { useParams } from "next/navigation";
+import { apiRequest, getErrorMessage } from "@/lib/api/http";
+import { getSiteBaseUrl } from "@/lib/config";
 import type { Orden } from "@/types/orders";
 
 type OrdenEstado =
@@ -82,8 +84,7 @@ export default function PrintOrdenPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL!;
-  const siteBase = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const siteBase = getSiteBaseUrl();
 
   const [data, setData] = React.useState<Orden | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -95,23 +96,15 @@ export default function PrintOrdenPage() {
     setLoading(true);
     setData(null);
 
-    fetch(`${apiBase}/api/ordenes/${id}/`, {
-      credentials: "include",
+    apiRequest<Orden>(`/api/ordenes/${id}/`, {
       cache: "no-store",
     })
-      .then(async (r) => {
-        if (!r.ok) {
-          const txt = await r.text().catch(() => "");
-          throw new Error(txt || `Error ${r.status}`);
-        }
-        return r.json();
-      })
       .then(setData)
       .catch((e: unknown) =>
-        setError(e instanceof Error ? e.message : "No se pudo cargar la orden."),
+        setError(getErrorMessage(e, "No se pudo cargar la orden.")),
       )
       .finally(() => setLoading(false));
-  }, [id, apiBase]);
+  }, [id]);
 
   const trackingUrl = data?.public_token
     ? `${siteBase}/seguimiento/${data.public_token}`

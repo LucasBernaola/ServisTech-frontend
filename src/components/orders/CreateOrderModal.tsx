@@ -62,14 +62,15 @@ const inputCls =
   "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 sm:py-2 text-sm text-white/85 outline-none focus:border-white/20 placeholder:text-white/35";
 
 export function CreateOrderModal({
+  apiBaseUrl,
   open,
   onClose,
 }: {
+  apiBaseUrl: string;
   open: boolean;
   onClose: () => void;
 }) {
   const router = useRouter();
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL!;
 
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);

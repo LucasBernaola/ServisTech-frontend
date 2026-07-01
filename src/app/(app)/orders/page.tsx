@@ -2,6 +2,9 @@ import { getOrdenes } from "@/lib/api/orders";
 import { OrdersClient } from "./OrdersClient";
 import { OrdersTable } from "@/components/OrdersTable";
 import { OrdersToolbar } from "./OrdersToolbar";
+import { getApiBaseUrl } from "@/lib/config";
+
+const API_BASE_URL = getApiBaseUrl();
 
 export default async function OrdersPage({
   searchParams,
@@ -34,7 +37,7 @@ export default async function OrdersPage({
       </div>
 
       {/* Toolbar */}
-      <OrdersToolbar />
+      <OrdersToolbar apiBaseUrl={API_BASE_URL} />
 
       {/* Filters */}
       <OrdersClient
@@ -47,10 +50,7 @@ export default async function OrdersPage({
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <OrdersTable
-          rows={data.results}
-          apiBaseUrl={process.env.NEXT_PUBLIC_API_URL!}
-        />
+        <OrdersTable rows={data.results} apiBaseUrl={API_BASE_URL} />
       </div>
     </div>
   );

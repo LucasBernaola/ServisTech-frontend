@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Pencil, Check, Eye, EyeOff } from "lucide-react";
+import { apiRequest, getErrorMessage } from "@/lib/api/http";
 
 type Profile = {
   id: number;
@@ -15,53 +16,6 @@ type Profile = {
 };
 
 type EditableKey = "username" | "email" | "first_name" | "last_name";
-type ApiErrorBody = Record<string, unknown> & { detail?: unknown };
-
-function apiBase(): string {
-  const base = process.env.NEXT_PUBLIC_API_URL || "";
-  return base.replace(/\/+$/, "");
-}
-
-function normalizeError(err: unknown): string {
-  if (!err) return "Error inesperado.";
-  if (typeof err === "string") return err;
-
-  if (typeof err !== "object") return "Error inesperado.";
-
-  const body = err as ApiErrorBody;
-  if (body.detail) return String(body.detail);
-
-  const entries = Object.entries(body);
-  if (!entries.length) return "Error inesperado.";
-  return entries
-    .map(([k, v]) =>
-      Array.isArray(v) ? `${k}: ${v.join(" ")}` : `${k}: ${String(v)}`
-    )
-    .join("\n");
-}
-
-async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const url = `${apiBase()}${path}`;
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      ...(options.body ? { "Content-Type": "application/json" } : {}),
-      ...(options.headers || {}),
-    },
-    credentials: "include",
-  });
-
-  if (!res.ok) {
-    let data: unknown = null;
-    try {
-      data = await res.json();
-    } catch {}
-    throw data || { detail: `HTTP ${res.status}` };
-  }
-
-  if (res.status === 204) return null as T;
-  return (await res.json()) as T;
-}
 
 function Alert({ type, text }: { type: "success" | "error" | "info"; text: string }) {
   const base = "rounded-xl border px-4 py-3 text-sm whitespace-pre-line";
@@ -214,7 +168,7 @@ export default function SettingsPage() {
     setMsg(null);
 
     try {
-      const updated = await apiFetch<Profile>("/api/profile/", {
+      const updated = await apiRequest<Profile>("/api/profile/", {
         method: "PATCH",
         body: JSON.stringify(form),
       });
@@ -233,7 +187,7 @@ export default function SettingsPage() {
       });
       setMsg("Perfil actualizado.");
     } catch (e: unknown) {
-      setErr(normalizeError(e));
+      setErr(getErrorMessage(e, "No se pudo actualizar el perfil."));
     } finally {
       setSaving(false);
     }
@@ -260,7 +214,7 @@ export default function SettingsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const data = await apiFetch<Profile>("/api/profile/");
+        const data = await apiRequest<Profile>("/api/profile/");
         setProfile(data);
         setForm({
           username: data.username,
@@ -269,7 +223,7 @@ export default function SettingsPage() {
           email: data.email || "",
         });
       } catch (e: unknown) {
-        setErr(normalizeError(e));
+        setErr(getErrorMessage(e, "No se pudo cargar el perfil."));
       } finally {
         setLoading(false);
       }

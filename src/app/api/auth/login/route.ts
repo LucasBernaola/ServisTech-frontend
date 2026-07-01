@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-
-const DJANGO_API = process.env.DJANGO_API_URL ?? "http://localhost:8000/api";
+import { parseApiResponse } from "@/lib/api/http";
+import { getDjangoApiUrl } from "@/lib/config";
 
 type HeadersWithSetCookie = Headers & {
   getSetCookie?: () => string[];
@@ -17,20 +17,20 @@ function rewriteCookieForFrontend(cookie: string) {
 export async function POST(req: Request) {
   const body = await req.json();
 
-  const djangoRes = await fetch(`${DJANGO_API}/token/`, {
+  const djangoRes = await fetch(`${getDjangoApiUrl()}/token/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
     cache: "no-store",
   });
 
-  const data = await djangoRes.json().catch(() => ({}));
-
-  if (!djangoRes.ok) {
-    return NextResponse.json(
-      { error: data?.detail ?? "Credenciales invalidas", data },
-      { status: 401 },
-    );
+  let data: unknown;
+  try {
+    data = await parseApiResponse<unknown>(djangoRes);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Credenciales invalidas";
+    return NextResponse.json({ error: message }, { status: 401 });
   }
 
   const headers = djangoRes.headers as HeadersWithSetCookie;

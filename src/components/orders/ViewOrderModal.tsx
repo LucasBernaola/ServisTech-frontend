@@ -106,16 +106,17 @@ const inputCls =
 const darkSelectStyle: CSSProperties = { colorScheme: "dark" };
 
 export function ViewOrderModal({
+  apiBaseUrl,
   open,
   onClose,
   ordenId,
 }: {
+  apiBaseUrl: string;
   open: boolean;
   onClose: () => void;
   ordenId: number | null;
 }) {
   const router = useRouter();
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL!;
 
   const [busy, setBusy] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
@@ -152,6 +153,10 @@ export function ViewOrderModal({
   const loadOrden = React.useCallback(async () => {
     if (!ordenId) {
       setError("Falta ordenId.");
+      return;
+    }
+    if (!apiBaseUrl) {
+      setError("Falta apiBaseUrl.");
       return;
     }
     setLoading(true);

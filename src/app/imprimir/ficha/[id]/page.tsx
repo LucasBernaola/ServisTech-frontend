@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useParams } from "next/navigation";
+import { apiRequest, getErrorMessage } from "@/lib/api/http";
 
 type OrdenFoto = {
   id: number;
@@ -172,11 +173,6 @@ export default function Page() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
 
-  const apiBase = React.useMemo(
-    () => process.env.NEXT_PUBLIC_API_URL || "",
-    []
-  );
-
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [data, setData] = React.useState<Orden | null>(null);
@@ -187,21 +183,15 @@ export default function Page() {
     setLoading(true);
     setData(null);
 
-    fetch(`${apiBase}/api/ordenes/${id}/`, {
-      credentials: "include",
+    apiRequest<Orden>(`/api/ordenes/${id}/`, {
       cache: "no-store",
     })
-      .then(async (r) => {
-        if (!r.ok) {
-          const txt = await r.text().catch(() => "");
-          throw new Error(txt || `Error ${r.status}`);
-        }
-        return r.json();
-      })
       .then(setData)
-      .catch((e) => setError(e?.message || "No se pudo cargar la orden."))
+      .catch((e: unknown) =>
+        setError(getErrorMessage(e, "No se pudo cargar la orden.")),
+      )
       .finally(() => setLoading(false));
-  }, [id, apiBase]);
+  }, [id]);
 
   const numeroFicha = React.useMemo(() => {
     if (!data) return "";

@@ -1,4 +1,5 @@
-// src/lib/api/clients.client.ts
+import { apiRequest } from "@/lib/api/http";
+
 export type Cliente = {
   id: number;
   nombre: string;
@@ -10,34 +11,30 @@ export type Cliente = {
   updated_at?: string;
 };
 
-type Paginated<T> = {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
-} | T[]; // por si en algún momento no paginás clientes
+type Paginated<T> =
+  | {
+      count: number;
+      next: string | null;
+      previous: string | null;
+      results: T[];
+    }
+  | T[];
 
 export async function searchClientesClient(opts: {
   apiBaseUrl: string;
   q: string;
-  pageSize?: number; // opcional si tu backend lo respeta
+  pageSize?: number;
 }) {
-  const usp = new URLSearchParams();
-  usp.set("search", opts.q);
-  if (opts.pageSize) usp.set("page_size", String(opts.pageSize));
+  const params = new URLSearchParams();
+  params.set("search", opts.q);
+  if (opts.pageSize) params.set("page_size", String(opts.pageSize));
 
-  const r = await fetch(`${opts.apiBaseUrl}/api/clientes/?${usp.toString()}`, {
-    credentials: "include",
-  });
+  const data = await apiRequest<Paginated<Cliente>>(
+    `/api/clientes/?${params.toString()}`,
+    {
+      apiBaseUrl: opts.apiBaseUrl,
+    },
+  );
 
-  if (!r.ok) {
-    const txt = await r.text().catch(() => "");
-    throw new Error(txt || `Error ${r.status}`);
-  }
-
-  const data: Paginated<Cliente> = await r.json();
-
-  // normalizar: si viene paginado → results, si no → array
-  const results = Array.isArray(data) ? data : data.results;
-  return results;
+  return Array.isArray(data) ? data : data.results;
 }

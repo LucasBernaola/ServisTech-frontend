@@ -3,7 +3,7 @@
 import React from "react";
 import { CreateOrderModal } from "@/components/orders/CreateOrderModal";
 
-export function OrdersToolbar() {
+export function OrdersToolbar({ apiBaseUrl }: { apiBaseUrl: string }) {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -19,7 +19,11 @@ export function OrdersToolbar() {
 
       </div>
 
-      <CreateOrderModal open={open} onClose={() => setOpen(false)} />
+      <CreateOrderModal
+        apiBaseUrl={apiBaseUrl}
+        open={open}
+        onClose={() => setOpen(false)}
+      />
     </>
   );
 }

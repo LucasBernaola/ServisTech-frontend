@@ -3,6 +3,7 @@
 import React from "react";
 import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
+import { apiRequest } from "@/lib/api/http";
 import type { Orden, OrdenEstado } from "@/types/orders";
 import { ViewOrderModal } from "./orders/ViewOrderModal";
 
@@ -121,19 +122,11 @@ async function patchOrdenEstado(opts: {
   if (!opts.apiBaseUrl)
     throw new Error("Falta apiBaseUrl para actualizar el estado.");
 
-  const r = await fetch(`${opts.apiBaseUrl}/api/ordenes/${opts.id}/estado/`, {
+  return apiRequest<unknown>(`/api/ordenes/${opts.id}/estado/`, {
+    apiBaseUrl: opts.apiBaseUrl,
     method: "PATCH",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ estado: opts.estado, ...(opts.payload || {}) }),
   });
-
-  if (!r.ok) {
-    const txt = await r.text().catch(() => "");
-    throw new Error(txt || `Error ${r.status}`);
-  }
-
-  return r.json();
 }
 
 function EstadoPillButton({
@@ -1026,6 +1019,7 @@ export function OrdersTable({
       ) : null}
 
       <ViewOrderModal
+        apiBaseUrl={apiBaseUrl || ""}
         open={openView}
         onClose={() => setOpenView(false)}
         ordenId={viewOrdenId}
