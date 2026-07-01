@@ -79,11 +79,9 @@ export function OrdersClient({
   const goPage = (p: number) => pushParams({ page: String(p) });
 
   return (
-    <div className="mb-4 flex flex-col gap-3">
-      
-      {/* Tabs */}
+    <div className="flex flex-col gap-3">
       <div className="flex w-full overflow-x-auto no-scrollbar">
-        <div className="flex w-full sm:w-fit items-center gap-1 rounded-xl border border-white/10 bg-white/5 p-1">
+        <div className="flex w-full items-center gap-1 rounded-lg border border-white/10 bg-black/20 p-1 sm:w-fit">
           {tabs.map((t) => {
             const active = tab === t.key;
             return (
@@ -91,10 +89,10 @@ export function OrdersClient({
                 key={t.key}
                 onClick={() => onTab(t.key)}
                 className={[
-                  "whitespace-nowrap rounded-lg px-3 py-1.5 text-xs sm:text-sm transition",
+                  "whitespace-nowrap rounded-md px-3 py-1.5 text-xs transition sm:text-sm",
                   active
-                    ? "bg-white/10 text-white"
-                    : "text-white/70 hover:bg-white/5",
+                    ? "bg-amber-300 text-black"
+                    : "text-white/65 hover:bg-white/[0.06] hover:text-white",
                 ].join(" ")}
               >
                 {t.label}
@@ -104,38 +102,32 @@ export function OrdersClient({
         </div>
       </div>
 
-      {/* Search + Pagination */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        
-        {/* Search */}
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por ID, cliente, marca, modelo o IMEI..."
-          className="w-full sm:max-w-[320px] md:max-w-[380px] rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white/85 placeholder:text-white/40 outline-none focus:border-white/20"
+          className="input w-full sm:max-w-[380px]"
         />
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between sm:justify-end gap-2">
-          
+        <div className="flex items-center justify-between gap-2 sm:justify-end">
           <button
             disabled={page <= 1}
             onClick={() => goPage(page - 1)}
-            className="w-full sm:w-auto rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/80 hover:bg-white/8 disabled:opacity-40"
+            className="btn btn-secondary w-full px-3 py-2 text-xs sm:w-auto"
           >
             Anterior
           </button>
 
-          <div className="text-[11px] sm:text-xs text-white/60 text-center min-w-[90px]">
-            <span className="block sm:inline">
-              {page} / {totalPages}
-            </span>
+          <div className="min-w-[90px] text-center text-[11px] text-white/60 sm:text-xs">
+            <span className="text-white/85">{page}</span>
+            <span className="text-white/35"> / {totalPages}</span>
           </div>
 
           <button
             disabled={page >= totalPages}
             onClick={() => goPage(page + 1)}
-            className="w-full sm:w-auto rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/80 hover:bg-white/8 disabled:opacity-40"
+            className="btn btn-secondary w-full px-3 py-2 text-xs sm:w-auto"
           >
             Siguiente
           </button>

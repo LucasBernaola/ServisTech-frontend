@@ -3,6 +3,7 @@ import DashboardClientsTable from "@/components/DashboardClientsTable";
 import { getClientesRecent } from "@/lib/api/clients";
 import { getOrdenesRecent } from "@/lib/api/orders";
 import { getApiBaseUrl } from "@/lib/config";
+import { ClipboardList, Users, Wrench } from "lucide-react";
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -12,40 +13,75 @@ export default async function DashboardPage() {
     getClientesRecent(),
   ]);
 
+  const ordenesRows = ordenes.results || [];
+  const clientesRows = clientes.results || [];
+
   return (
-    <div className="p-3 sm:p-4 md:p-5 space-y-4 sm:space-y-6">
-      <div>
-        <h1 className="text-lg sm:text-xl font-semibold text-white">
-          Dashboard
-        </h1>
-        <p className="text-xs sm:text-sm text-white/60">
-          Ultimas ordenes y ultimos clientes ingresados.
-        </p>
-      </div>
-
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
-        <div className="px-3 sm:px-4 py-3 border-b border-white/10">
-          <div className="text-sm font-semibold text-white">
-            Ordenes recientes
+    <div className="space-y-5">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="panel p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-[0.16em] text-white/42">
+              Ordenes
+            </span>
+            <ClipboardList className="h-4 w-4 text-amber-300" />
           </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <OrdersTable apiBaseUrl={API_BASE_URL} rows={ordenes.results || []} />
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
-        <div className="px-3 sm:px-4 py-3 border-b border-white/10">
-          <div className="text-sm font-semibold text-white">
-            Clientes recientes
+          <div className="mt-3 text-2xl font-semibold text-white">
+            {ordenes.count ?? ordenesRows.length}
           </div>
+          <p className="mt-1 text-sm text-white/45">Registradas en el sistema</p>
         </div>
 
-        <div className="overflow-x-auto">
-          <DashboardClientsTable rows={clientes.results || []} />
+        <div className="panel p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-[0.16em] text-white/42">
+              Clientes
+            </span>
+            <Users className="h-4 w-4 text-amber-300" />
+          </div>
+          <div className="mt-3 text-2xl font-semibold text-white">
+            {clientes.count ?? clientesRows.length}
+          </div>
+          <p className="mt-1 text-sm text-white/45">Contactos cargados</p>
+        </div>
+
+        <div className="panel p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-[0.16em] text-white/42">
+              Actividad
+            </span>
+            <Wrench className="h-4 w-4 text-amber-300" />
+          </div>
+          <div className="mt-3 text-2xl font-semibold text-white">
+            {ordenesRows.length}
+          </div>
+          <p className="mt-1 text-sm text-white/45">Ordenes recientes visibles</p>
         </div>
       </div>
+
+      <section className="panel overflow-hidden">
+        <div className="border-b border-white/10 px-4 py-3">
+          <h2 className="text-sm font-semibold text-white">Ordenes recientes</h2>
+          <p className="mt-0.5 text-xs text-white/45">
+            Ultimos equipos ingresados o actualizados.
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <OrdersTable apiBaseUrl={API_BASE_URL} rows={ordenesRows} />
+        </div>
+      </section>
+
+      <section className="panel overflow-hidden">
+        <div className="border-b border-white/10 px-4 py-3">
+          <h2 className="text-sm font-semibold text-white">Clientes recientes</h2>
+          <p className="mt-0.5 text-xs text-white/45">
+            Ultimos contactos registrados para futuras ordenes.
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <DashboardClientsTable rows={clientesRows} />
+        </div>
+      </section>
     </div>
   );
 }

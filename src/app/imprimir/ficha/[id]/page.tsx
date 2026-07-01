@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Printer, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import { apiRequest, getErrorMessage } from "@/lib/api/http";
 
@@ -26,31 +27,31 @@ type Orden = {
   fotos?: OrdenFoto[];
 };
 
-function safeText(v: unknown) {
-  if (v === null || v === undefined) return "";
-  return String(v).trim();
+function safeText(value: unknown) {
+  if (value === null || value === undefined) return "";
+  return String(value).trim();
 }
 
-function joinNonEmpty(parts: string[], sep = " — ") {
-  return parts.map((p) => safeText(p)).filter(Boolean).join(sep);
+function joinNonEmpty(parts: string[], sep = " - ") {
+  return parts.map((part) => safeText(part)).filter(Boolean).join(sep);
 }
 
 function parsePattern(value?: string | null): number[] {
-  const v = safeText(value);
-  if (!v) return [];
-  return v
-    .split(/[-,→\s]+/g)
-    .map((x) => Number(x))
-    .filter((n) => Number.isFinite(n) && n >= 1 && n <= 9);
+  const clean = safeText(value);
+  if (!clean) return [];
+  return clean
+    .split(/[-,>\s]+/g)
+    .map((item) => Number(item))
+    .filter((number) => Number.isFinite(number) && number >= 1 && number <= 9);
 }
 
 function patternToArrows(seq: number[]) {
-  return seq.length ? seq.join("→") : "";
+  return seq.length ? seq.join(" > ") : "";
 }
 
 function PatternPreview({
   value,
-  size = 140,
+  size = 132,
   theme = "dark",
 }: {
   value: string;
@@ -58,96 +59,98 @@ function PatternPreview({
   theme?: "dark" | "light";
 }) {
   const seq = React.useMemo(() => parsePattern(value), [value]);
-
   const pad = 14;
   const inner = size - pad * 2;
-
   const dotRadius = theme === "dark" ? 7 : 6;
-  const dotBorder =
-    theme === "dark" ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.18)";
-  const dotFill =
-    theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)";
-  const activeFill =
-    theme === "dark" ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.75)";
-  const lineColor =
-    theme === "dark" ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.65)";
-  const gridBorder =
-    theme === "dark" ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)";
-  const gridBg =
-    theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)";
 
-  const pts = React.useMemo(() => {
+  const colors =
+    theme === "dark"
+      ? {
+          dotBorder: "rgba(255,255,255,0.25)",
+          dotFill: "rgba(255,255,255,0.08)",
+          activeFill: "#fcd34d",
+          line: "rgba(252,211,77,0.78)",
+          border: "rgba(255,255,255,0.12)",
+          bg: "rgba(255,255,255,0.04)",
+        }
+      : {
+          dotBorder: "rgba(0,0,0,0.18)",
+          dotFill: "rgba(0,0,0,0.04)",
+          activeFill: "#111827",
+          line: "rgba(17,24,39,0.70)",
+          border: "rgba(0,0,0,0.14)",
+          bg: "rgba(0,0,0,0.03)",
+        };
+
+  const points = React.useMemo(() => {
     const step = inner / 2;
     const map: Record<number, { x: number; y: number }> = {};
+
     for (let i = 1; i <= 9; i++) {
       const idx = i - 1;
       const col = idx % 3;
       const row = Math.floor(idx / 3);
       map[i] = { x: pad + col * step, y: pad + row * step };
     }
+
     return map;
-  }, [inner, pad]);
+  }, [inner]);
 
   const segments = React.useMemo(() => {
     if (seq.length < 2) return [];
-    const segs: Array<{ x1: number; y1: number; x2: number; y2: number }> = [];
-    for (let i = 0; i < seq.length - 1; i++) {
-      const a = pts[seq[i]];
-      const b = pts[seq[i + 1]];
-      if (a && b) segs.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y });
-    }
-    return segs;
-  }, [seq, pts]);
+
+    return seq.slice(0, -1).flatMap((item, index) => {
+      const from = points[item];
+      const to = points[seq[index + 1]];
+      return from && to ? [{ from, to }] : [];
+    });
+  }, [points, seq]);
 
   const active = React.useMemo(() => new Set(seq), [seq]);
 
   return (
     <div
-      className="relative overflow-hidden rounded-xl flex-shrink-0"
+      className="relative shrink-0 overflow-hidden rounded-lg"
       style={{
         width: size,
         height: size,
-        border: `1px solid ${gridBorder}`,
-        background: gridBg,
+        border: `1px solid ${colors.border}`,
+        background: colors.bg,
       }}
-      aria-label="Patrón de bloqueo"
+      aria-label="Patron de bloqueo"
       title={patternToArrows(seq)}
     >
       <svg width={size} height={size} className="absolute inset-0">
-        {segments.map((s, idx) => (
+        {segments.map((segment, index) => (
           <line
-            key={idx}
-            x1={s.x1}
-            y1={s.y1}
-            x2={s.x2}
-            y2={s.y2}
-            stroke={lineColor}
+            key={index}
+            x1={segment.from.x}
+            y1={segment.from.y}
+            x2={segment.to.x}
+            y2={segment.to.y}
+            stroke={colors.line}
             strokeWidth={theme === "dark" ? 6 : 5}
             strokeLinecap="round"
           />
         ))}
       </svg>
 
-      {Array.from({ length: 9 }, (_, i) => i + 1).map((n) => {
-        const p = pts[n];
-        const isActive = active.has(n);
+      {Array.from({ length: 9 }, (_, index) => index + 1).map((number) => {
+        const point = points[number];
+        const isActive = active.has(number);
+
         return (
           <div
-            key={n}
+            key={number}
             className="absolute -translate-x-1/2 -translate-y-1/2"
             style={{
-              left: p.x,
-              top: p.y,
+              left: point.x,
+              top: point.y,
               width: dotRadius * 2,
               height: dotRadius * 2,
               borderRadius: 999,
-              border: `2px solid ${dotBorder}`,
-              background: isActive ? activeFill : dotFill,
-              boxShadow: isActive
-                ? theme === "dark"
-                  ? "0 0 0 6px rgba(255,255,255,0.12)"
-                  : "0 0 0 6px rgba(0,0,0,0.06)"
-                : "none",
+              border: `2px solid ${colors.dotBorder}`,
+              background: isActive ? colors.activeFill : colors.dotFill,
             }}
           />
         );
@@ -157,16 +160,40 @@ function PatternPreview({
 }
 
 function formatBloqueoText(tipo?: BloqueoTipo | null, valor?: string | null) {
-  const t = (tipo ?? "none") as BloqueoTipo;
-  const v = safeText(valor);
-  if (t === "none") return "Sin contraseña";
-  if (t === "pin") return v ? `PIN: ${v}` : "PIN";
-  if (t === "texto") return v ? `Texto: ${v}` : "Texto";
-  if (t === "patron") {
-    const seq = parsePattern(v);
-    return seq.length ? `Patrón: ${patternToArrows(seq)}` : "Patrón";
+  const current = (tipo ?? "none") as BloqueoTipo;
+  const text = safeText(valor);
+
+  if (current === "none") return "Sin contrasena";
+  if (current === "pin") return text ? `PIN: ${text}` : "PIN";
+  if (current === "texto") return text ? `Texto: ${text}` : "Texto";
+
+  if (current === "patron") {
+    const seq = parsePattern(text);
+    return seq.length ? `Patron: ${patternToArrows(seq)}` : "Patron";
   }
-  return "Sin contraseña";
+
+  return "Sin contrasena";
+}
+
+function InfoBlock({
+  label,
+  value,
+  className = "",
+}: {
+  label: string;
+  value: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`rounded-lg border border-white/10 bg-white/[0.035] p-4 ${className}`}>
+      <div className="text-xs font-medium uppercase tracking-[0.16em] text-white/42">
+        {label}
+      </div>
+      <div className="mt-2 min-h-6 break-words text-base font-semibold text-white">
+        {value}
+      </div>
+    </div>
+  );
 }
 
 export default function Page() {
@@ -179,6 +206,7 @@ export default function Page() {
 
   React.useEffect(() => {
     if (!id) return;
+
     setError(null);
     setLoading(true);
     setData(null);
@@ -198,53 +226,24 @@ export default function Page() {
     return safeText(data.numero_orden ?? data.id);
   }, [data]);
 
-  const marca = React.useMemo(() => safeText(data?.marca ?? ""), [data]);
-  const modelo = React.useMemo(() => safeText(data?.modelo ?? ""), [data]);
-  const imei = React.useMemo(() => safeText(data?.imei_serial ?? ""), [data]);
-
+  const marca = safeText(data?.marca ?? "");
+  const modelo = safeText(data?.modelo ?? "");
+  const imei = safeText(data?.imei_serial ?? "");
   const bloqueoTipo = (data?.bloqueo_tipo ?? "none") as BloqueoTipo;
   const bloqueoValor = safeText(data?.bloqueo_valor ?? "");
-
-  const bloqueoTexto = React.useMemo(() => {
-    return formatBloqueoText(bloqueoTipo, bloqueoValor);
-  }, [bloqueoTipo, bloqueoValor]);
-
-  const patronSeq = React.useMemo(
-    () => parsePattern(bloqueoValor),
-    [bloqueoValor]
+  const bloqueoTexto = formatBloqueoText(bloqueoTipo, bloqueoValor);
+  const patronSeq = parsePattern(bloqueoValor);
+  const patronArrows = patternToArrows(patronSeq);
+  const fallaObs = joinNonEmpty(
+    [safeText(data?.falla_reportada ?? ""), safeText(data?.observaciones ?? "")],
+    " - ",
   );
-  const patronArrows = React.useMemo(
-    () => patternToArrows(patronSeq),
-    [patronSeq]
-  );
-
-  const fallaObs = React.useMemo(() => {
-    const falla = safeText(data?.falla_reportada ?? "");
-    const obs = safeText(data?.observaciones ?? "");
-    return joinNonEmpty([falla, obs], " — ");
-  }, [data]);
 
   return (
-    <div className="min-h-screen bg-[#0b0f16] text-slate-100">
+    <div className="min-h-screen necotec-bg text-white">
       <style jsx global>{`
         @page {
           margin: 6mm;
-        }
-
-        .card-screen {
-          width: 100%;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: #101827;
-          box-shadow: 0 20px 80px rgba(0, 0, 0, 0.55);
-        }
-
-        .label-print {
-          width: 58mm;
-          border-radius: 8px;
-          border: 1px solid rgba(0, 0, 0, 0.2);
-          background: white;
-          color: #0b0f16;
         }
 
         .print-colors * {
@@ -252,225 +251,190 @@ export default function Page() {
           print-color-adjust: exact !important;
         }
 
+        .label-print {
+          width: 58mm;
+          border-radius: 8px;
+          border: 1px solid rgba(0, 0, 0, 0.18);
+          background: white;
+          color: #111827;
+        }
+
+        @media screen {
+          .only-print {
+            display: none !important;
+          }
+        }
+
         @media print {
           body {
             background: white !important;
           }
-          .no-print {
-            display: none !important;
-          }
+
+          .no-print,
           .only-screen {
             display: none !important;
           }
+
           .only-print {
             display: block !important;
           }
+
+          .print-wrap {
+            padding: 0 !important;
+          }
+
           .avoid-break {
             break-inside: avoid;
             page-break-inside: avoid;
           }
         }
-
-        @media screen {
-          .only-print {
-            display: none;
-          }
-        }
       `}</style>
 
-      {/* ── Navbar ── */}
-      <div className="no-print sticky top-0 z-10 border-b border-white/10 bg-[#0b0f16]/85 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-3 py-2 sm:px-4 sm:py-3">
-          <div className="text-xs sm:text-sm text-slate-300">Ficha técnica</div>
-          <div className="flex gap-1.5 sm:gap-2">
+      <div className="no-print sticky top-0 z-20 border-b border-white/10 bg-[#0f1012]/85 backdrop-blur">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
+          <div className="min-w-0">
+            <div className="text-xs font-medium uppercase tracking-[0.16em] text-amber-200/70">
+              ServisTech
+            </div>
+            <div className="truncate text-sm text-white/70">Ficha tecnica</div>
+          </div>
+
+          <div className="flex gap-2">
             <button
               onClick={() => window.print()}
-              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs sm:px-3 sm:text-sm hover:bg-white/10 active:bg-white/15 transition-colors"
+              className="btn btn-primary gap-2 px-3 py-2 text-xs sm:text-sm"
             >
+              <Printer className="h-4 w-4" />
               Imprimir
             </button>
             <button
               onClick={() => window.close()}
-              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs sm:px-3 sm:text-sm hover:bg-white/10 active:bg-white/15 transition-colors"
+              className="btn btn-secondary gap-2 px-3 py-2 text-xs sm:text-sm"
             >
+              <X className="h-4 w-4" />
               Cerrar
             </button>
           </div>
         </div>
       </div>
 
-      {/* ── Contenido ── */}
-      <div className="mx-auto flex max-w-4xl justify-center px-3 py-5 sm:px-4 sm:py-10">
+      <main className="print-wrap mx-auto flex max-w-5xl justify-center px-4 py-6 sm:py-10">
         {loading ? (
-          <div className="w-full rounded-xl border border-white/10 bg-[#101827] p-4 text-sm text-slate-300">
+          <div className="panel w-full p-5 text-sm text-white/65">
             Cargando ficha...
           </div>
         ) : error ? (
-          <div className="w-full rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+          <div className="w-full rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100">
             {error}
           </div>
         ) : !data ? (
-          <div className="w-full rounded-xl border border-white/10 bg-[#101827] p-4 text-sm text-slate-300">
-            No se encontró la orden.
+          <div className="panel w-full p-5 text-sm text-white/65">
+            No se encontro la orden.
           </div>
         ) : (
           <>
-            {/* ── SCREEN ── */}
-            <div className="only-screen card-screen print-colors avoid-break p-4 sm:p-6 md:p-8">
+            <section className="only-screen panel print-colors avoid-break w-full overflow-hidden">
+              <div className="border-b border-white/10 p-5 sm:p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-[0.16em] text-amber-200/70">
+                      Ficha tecnica
+                    </p>
+                    <h1 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">
+                      #{numeroFicha}
+                    </h1>
+                    <p className="mt-2 text-sm text-white/48">
+                      Etiqueta tecnica para identificar equipo, bloqueo y falla reportada.
+                    </p>
+                  </div>
 
-              {/* Header */}
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-slate-300">
-                    SERVISTECH • FICHA TÉCNICA
+                  <div className="rounded-lg border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs font-semibold text-amber-100">
+                    TALLER
                   </div>
-                  <div className="mt-1 text-2xl sm:text-3xl font-extrabold text-white">
-                    #{numeroFicha}
-                  </div>
-                </div>
-                <div className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] sm:text-xs font-semibold text-white/80">
-                  TALLER
                 </div>
               </div>
 
-              <div className="my-4 sm:my-6 border-t border-white/10" />
+              <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 sm:p-6">
+                <InfoBlock label="Marca" value={marca || "-"} />
+                <InfoBlock label="Modelo" value={modelo || "-"} />
+                <InfoBlock label="IMEI / Serial" value={imei || "-"} className="sm:col-span-2" />
 
-              {/* Grid de campos */}
-              <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
-
-                {/* Marca */}
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-4">
-                  <div className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-white/60">
-                    Marca
-                  </div>
-                  <div className="mt-1 text-base sm:text-lg font-semibold text-white truncate">
-                    {marca || "—"}
-                  </div>
-                </div>
-
-                {/* Modelo */}
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-4">
-                  <div className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-white/60">
-                    Modelo
-                  </div>
-                  <div className="mt-1 text-base sm:text-lg font-semibold text-white truncate">
-                    {modelo || "—"}
-                  </div>
-                </div>
-
-                {/* IMEI */}
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-4 sm:col-span-2">
-                  <div className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-white/60">
-                    IMEI
-                  </div>
-                  <div className="mt-1 break-all text-base sm:text-lg font-semibold text-white">
-                    {imei || "—"}
-                  </div>
-                </div>
-
-                {/* Bloqueo */}
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-4 sm:col-span-2">
-                  <div className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-white/60">
+                <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 sm:col-span-2">
+                  <div className="text-xs font-medium uppercase tracking-[0.16em] text-white/42">
                     Bloqueo
                   </div>
 
                   {bloqueoTipo === "patron" ? (
-                    <div className="mt-3 flex flex-col items-start gap-3 xs:flex-row xs:items-center">
-                      <PatternPreview
-                        value={bloqueoValor}
-                        size={120}
-                        theme="dark"
-                      />
-                      <div>
-                        <div className="text-base sm:text-lg font-semibold text-white">
-                          Patrón
-                        </div>
-                        <div className="mt-1 text-sm text-white/70 break-words">
-                          {patronArrows || "—"}
+                    <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+                      <PatternPreview value={bloqueoValor} size={132} theme="dark" />
+                      <div className="min-w-0">
+                        <div className="text-lg font-semibold text-white">Patron</div>
+                        <div className="mt-1 break-words text-sm text-white/60">
+                          {patronArrows || "-"}
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="mt-1 break-words text-base sm:text-lg font-semibold text-white">
-                      {bloqueoTexto || "Sin contraseña"}
+                    <div className="mt-2 break-words text-base font-semibold text-white">
+                      {bloqueoTexto || "Sin contrasena"}
                     </div>
                   )}
                 </div>
 
-                {/* Falla / Observaciones */}
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-4 sm:col-span-2">
-                  <div className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-white/60">
-                    Falla / Observaciones
-                  </div>
-                  <div className="mt-2 whitespace-pre-wrap break-words text-sm sm:text-base leading-relaxed text-white/90">
-                    {fallaObs || "—"}
-                  </div>
-                </div>
+                <InfoBlock
+                  label="Falla / Observaciones"
+                  value={
+                    <span className="whitespace-pre-wrap text-sm font-normal leading-relaxed text-white/82">
+                      {fallaObs || "-"}
+                    </span>
+                  }
+                  className="sm:col-span-2"
+                />
               </div>
-            </div>
+            </section>
 
-            {/* ── PRINT (etiqueta) ── */}
-            <div className="only-print print-colors avoid-break label-print mx-auto p-3">
+            <section className="only-print print-colors avoid-break label-print mx-auto p-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-wide text-black/70">
-                    NECOTEC • FICHA TÉCNICA
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-black/60">
+                    SERVISTECH - FICHA TECNICA
                   </div>
-                  <div className="mt-0.5 text-[18px] font-extrabold leading-none">
+                  <div className="mt-1 text-[20px] font-extrabold leading-none">
                     #{numeroFicha}
                   </div>
                 </div>
-                <div className="rounded-md border border-black/10 bg-black/[0.04] px-2 py-1 text-[10px] font-semibold">
+                <div className="rounded border border-black/10 bg-black/[0.04] px-2 py-1 text-[10px] font-semibold">
                   TALLER
                 </div>
               </div>
 
               <div className="my-2 border-t border-black/15" />
 
-              <div className="space-y-1">
-                <div className="flex items-baseline justify-between gap-2">
-                  <div className="text-[10px] font-semibold uppercase tracking-wide text-black/60">
-                    Marca
-                  </div>
-                  <div className="text-[12px] font-semibold">{marca || "—"}</div>
-                </div>
-                <div className="flex items-baseline justify-between gap-2">
-                  <div className="text-[10px] font-semibold uppercase tracking-wide text-black/60">
-                    Modelo
-                  </div>
-                  <div className="text-right text-[12px] font-semibold">
-                    {modelo || "—"}
-                  </div>
-                </div>
-                <div className="flex items-baseline justify-between gap-2">
-                  <div className="text-[10px] font-semibold uppercase tracking-wide text-black/60">
-                    IMEI
-                  </div>
-                  <div className="text-right text-[12px] font-semibold">
-                    {imei || "—"}
-                  </div>
-                </div>
+              <div className="space-y-1.5">
+                <PrintRow label="Marca" value={marca || "-"} />
+                <PrintRow label="Modelo" value={modelo || "-"} />
+                <PrintRow label="IMEI" value={imei || "-"} />
               </div>
 
               <div className="my-2 border-t border-black/15" />
 
               <div>
-                <div className="text-[10px] font-semibold uppercase tracking-wide text-black/60">
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-black/55">
                   Bloqueo
                 </div>
                 {bloqueoTipo === "patron" ? (
                   <div className="mt-2 flex items-center gap-2">
                     <PatternPreview value={bloqueoValor} size={82} theme="light" />
                     <div className="min-w-0">
-                      <div className="text-[12px] font-semibold">Patrón</div>
-                      <div className="mt-0.5 text-[11px] text-black/70 break-words">
-                        {patronArrows || "—"}
+                      <div className="text-[12px] font-semibold">Patron</div>
+                      <div className="mt-0.5 break-words text-[11px] text-black/65">
+                        {patronArrows || "-"}
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="mt-1 text-[12px] font-semibold">
-                    {bloqueoTexto || "Sin contraseña"}
+                    {bloqueoTexto || "Sin contrasena"}
                   </div>
                 )}
               </div>
@@ -478,7 +442,7 @@ export default function Page() {
               <div className="my-2 border-t border-black/15" />
 
               <div>
-                <div className="text-[10px] font-semibold uppercase tracking-wide text-black/60">
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-black/55">
                   Falla / Obs.
                 </div>
                 <div
@@ -491,13 +455,24 @@ export default function Page() {
                   }}
                   title={fallaObs || ""}
                 >
-                  {fallaObs || "—"}
+                  {fallaObs || "-"}
                 </div>
               </div>
-            </div>
+            </section>
           </>
         )}
+      </main>
+    </div>
+  );
+}
+
+function PrintRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <div className="text-[10px] font-semibold uppercase tracking-wide text-black/55">
+        {label}
       </div>
+      <div className="break-all text-right text-[12px] font-semibold">{value}</div>
     </div>
   );
 }

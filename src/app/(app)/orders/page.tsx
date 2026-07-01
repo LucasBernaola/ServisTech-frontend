@@ -1,8 +1,8 @@
+import { OrdersTable } from "@/components/OrdersTable";
+import { getApiBaseUrl } from "@/lib/config";
 import { getOrdenes } from "@/lib/api/orders";
 import { OrdersClient } from "./OrdersClient";
-import { OrdersTable } from "@/components/OrdersTable";
 import { OrdersToolbar } from "./OrdersToolbar";
-import { getApiBaseUrl } from "@/lib/config";
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -24,34 +24,36 @@ export default async function OrdersPage({
   const data = await getOrdenes({ page, tab, search });
 
   return (
-    <div className="px-3 sm:px-4 md:px-6 py-4 sm:py-5 md:py-6 space-y-4 sm:space-y-6">
-      
-      {/* Header */}
-      <div>
-        <h1 className="text-lg sm:text-xl font-semibold text-white">
-          Órdenes
-        </h1>
-        <p className="text-xs sm:text-sm text-white/60">
-          Gestioná y controlá todas las órdenes del sistema.
-        </p>
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-amber-200/70">
+            Mesa de trabajo
+          </p>
+          <h2 className="mt-1 text-xl font-semibold text-white">Ordenes</h2>
+          <p className="mt-1 text-sm text-white/50">
+            Busca equipos, filtra por estado y actualiza el avance de cada reparacion.
+          </p>
+        </div>
+
+        <OrdersToolbar apiBaseUrl={API_BASE_URL} />
       </div>
 
-      {/* Toolbar */}
-      <OrdersToolbar apiBaseUrl={API_BASE_URL} />
+      <section className="panel overflow-hidden">
+        <div className="border-b border-white/10 p-4">
+          <OrdersClient
+            initialTab={tab}
+            initialSearch={search}
+            page={Number(page)}
+            count={data.count}
+            pageSize={7}
+          />
+        </div>
 
-      {/* Filters */}
-      <OrdersClient
-        initialTab={tab}
-        initialSearch={search}
-        page={Number(page)}
-        count={data.count}
-        pageSize={7}
-      />
-
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <OrdersTable rows={data.results} apiBaseUrl={API_BASE_URL} />
-      </div>
+        <div className="overflow-x-auto">
+          <OrdersTable rows={data.results} apiBaseUrl={API_BASE_URL} />
+        </div>
+      </section>
     </div>
   );
 }

@@ -9,6 +9,24 @@ type User = {
   email?: string;
 };
 
+const titles = [
+  {
+    match: "/orders",
+    title: "Ordenes",
+    description: "Ingreso, diagnostico, reparacion y entrega.",
+  },
+  {
+    match: "/clients",
+    title: "Clientes",
+    description: "Datos de contacto e historial operativo.",
+  },
+  {
+    match: "/settings",
+    title: "Ajustes",
+    description: "Perfil, acceso y datos de la cuenta.",
+  },
+];
+
 export function Topbar() {
   const [user, setUser] = useState<User | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -69,40 +87,53 @@ export function Topbar() {
     }
   }
 
-  function getTitle() {
-    if (pathname.startsWith("/orders")) return "Órdenes";
-    if (pathname.startsWith("/clients")) return "Clientes";
-    if (pathname.startsWith("/settings")) return "Configuración";
-    return "Dashboard";
-  }
+  const current =
+    titles.find((item) => pathname.startsWith(item.match)) ?? {
+      title: "Dashboard",
+      description: "Resumen rapido del taller.",
+    };
 
   return (
-    <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 md:px-6">
-      <div className="text-sm font-medium text-white/70">{getTitle()}</div>
-
-      <div className="flex items-center gap-3">
-        {loadingUser ? (
-          <div className="h-4 w-24 animate-pulse rounded bg-white/10" />
-        ) : user ? (
-          <div className="flex items-center gap-2 text-sm text-white/80">
-            <CircleUserRound className="h-4 w-4" />
-            <span>{user.username || user.email}</span>
+    <header className="border-b border-white/10 bg-[#0f1012]/80 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4">
+        <div className="min-w-0">
+          <div className="text-xs font-medium uppercase tracking-[0.18em] text-amber-200/70">
+            ServisTech
           </div>
-        ) : null}
+          <h1 className="truncate text-lg font-semibold text-white sm:text-xl">
+            {current.title}
+          </h1>
+          <p className="hidden text-sm text-white/45 sm:block">
+            {current.description}
+          </p>
+        </div>
 
-        <button
-          onClick={handleLogout}
-          disabled={loggingOut}
-          className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 transition hover:bg-white/8 disabled:opacity-50"
-        >
-          {loggingOut ? (
-            <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          {loadingUser ? (
+            <div className="h-9 w-28 animate-pulse rounded-lg bg-white/10" />
+          ) : user ? (
+            <div className="hidden items-center gap-2 rounded-lg border border-white/10 bg-white/[0.035] px-3 py-2 text-sm text-white/75 sm:flex">
+              <CircleUserRound className="h-4 w-4 text-amber-200/80" />
+              <span className="max-w-36 truncate">{user.username || user.email}</span>
+            </div>
           ) : null}
 
-          <LogOut className="h-3.5 w-3.5" />
-          {loggingOut ? "Saliendo..." : "Cerrar sesión"}
-        </button>
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/[0.035] px-3 text-xs font-medium text-white/75 transition hover:bg-white/[0.08] disabled:opacity-50"
+          >
+            {loggingOut ? (
+              <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            ) : (
+              <LogOut className="h-3.5 w-3.5" />
+            )}
+            <span className="hidden sm:inline">
+              {loggingOut ? "Saliendo..." : "Salir"}
+            </span>
+          </button>
+        </div>
       </div>
-    </div>
+    </header>
   );
 }

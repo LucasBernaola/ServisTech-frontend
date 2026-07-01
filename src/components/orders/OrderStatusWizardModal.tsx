@@ -2,6 +2,7 @@
 
 import React from "react";
 import type { CSSProperties } from "react";
+import { Check, X } from "lucide-react";
 import { patchOrdenEstadoClient } from "@/lib/api/orders.client";
 import {
   coerceMoneyToNumber,
@@ -78,8 +79,8 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-      <div className="mb-1 text-xs text-white/60">{label}</div>
+    <div className="rounded-lg border border-white/10 bg-white/[0.035] p-3">
+      <div className="field-label">{label}</div>
       {children}
     </div>
   );
@@ -105,7 +106,7 @@ function MoneyInput({
       }}
       placeholder={placeholder}
       inputMode="decimal"
-      className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/85 placeholder:text-white/30 outline-none focus:border-white/20"
+      className="input placeholder:text-white/30"
     />
   );
 }
@@ -598,11 +599,11 @@ export function OrderStatusWizardModal({
 
   const primaryLabel = rollbackMode
     ? confirmRollback
-      ? "Confirmar rollback"
+      ? "Confirmar reversion"
       : "Revertir estado"
     : isNextStepToApply
       ? "Confirmar"
-      : "Continue";
+      : "Continuar";
 
   const primaryDisabled =
     isLoading || (!rollbackMode && !isNextStepToApply && !canContinue);
@@ -618,15 +619,22 @@ export function OrderStatusWizardModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-3 sm:p-4"
+      className="modal-root"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-2xl max-h-[94vh] sm:max-h-[92vh] overflow-hidden rounded-2xl border border-white/10 bg-[#0b0f16]/95 shadow-2xl backdrop-blur flex flex-col">
-        <div className="border-b border-white/10 p-4 sm:p-5">
+      <div className="modal-overlay" onMouseDown={onClose} />
+
+      <div className="modal-panel modal-panel-wide">
+        <div className="modal-drag" />
+
+        <div className="modal-header">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-2 flex-1">
+              <p className="text-xs font-medium uppercase tracking-[0.16em] text-amber-200/70">
+                Cambio de estado
+              </p>
               <Stepper currentIndex={currentIndex} activeIndex={step} />
               <div className="text-sm text-white/60">
                 Estado{" "}
@@ -644,14 +652,15 @@ export function OrderStatusWizardModal({
             <button
               type="button"
               onClick={onClose}
-              className="cursor-pointer rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 transition hover:bg-white/8 whitespace-nowrap"
+              className="modal-close"
+              aria-label="Cerrar"
             >
-              Cerrar
+              <X className="h-4 w-4" />
             </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+        <div className="modal-body space-y-4">
           {error ? (
             <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
               {error}
@@ -660,25 +669,26 @@ export function OrderStatusWizardModal({
 
           {rollbackMode && confirmRollback ? (
             <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
-              Vas a revertir el estado a <b>{activeLabel}</b>. ¿Confirmás?
+              Vas a revertir el estado a <b>{activeLabel}</b>. Confirmalo para aplicar el cambio.
             </div>
           ) : null}
 
           <div>{contentByState[activeEstado]}</div>
         </div>
 
-        <div className="border-t border-white/10 p-4 sm:p-5 space-y-3">
+        <div className="modal-footer space-y-3">
           <button
             type="button"
             disabled={primaryDisabled}
             onClick={primaryAction}
             className={[
-              "flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-medium transition",
+              "flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition",
               "cursor-pointer disabled:cursor-not-allowed disabled:opacity-50",
-              "bg-yellow-400 text-black hover:bg-yellow-300",
+              "bg-amber-300 text-black hover:bg-amber-200",
             ].join(" ")}
           >
-            {isLoading ? "Guardando..." : `✓ ${primaryLabel}`}
+            {isLoading ? null : <Check className="h-4 w-4" />}
+            {isLoading ? "Guardando..." : primaryLabel}
           </button>
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
@@ -692,7 +702,7 @@ export function OrderStatusWizardModal({
               }}
               className="cursor-pointer text-sm text-white/60 transition hover:text-white/80 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              ← Back
+              Volver
             </button>
 
             <div className="flex items-center gap-3 flex-wrap justify-center sm:justify-end">
@@ -709,7 +719,7 @@ export function OrderStatusWizardModal({
                   className="cursor-pointer text-sm text-white/60 transition hover:text-white/80 disabled:cursor-not-allowed disabled:opacity-40"
                   title="Volver al estado anterior"
                 >
-                  ↩ Revertir
+                  Revertir estado
                 </button>
               ) : null}
 
@@ -725,7 +735,7 @@ export function OrderStatusWizardModal({
                   }}
                   className="cursor-pointer text-sm text-white/60 transition hover:text-white/80 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Cancelar rollback
+                  Cancelar reversion
                 </button>
               ) : null}
             </div>

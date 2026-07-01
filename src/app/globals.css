@@ -1,18 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #0b0d16;
-  --surface: rgba(255, 255, 255, 0.04);
-  --surface-2: rgba(255, 255, 255, 0.06);
-  --border: rgba(255, 255, 255, 0.08);
+  --bg: #090a0c;
+  --surface: rgba(255, 255, 255, 0.045);
+  --surface-2: rgba(255, 255, 255, 0.075);
+  --border: rgba(255, 255, 255, 0.10);
 
   --text: rgba(255, 255, 255, 0.92);
-  --muted: rgba(255, 255, 255, 0.65);
+  --muted: rgba(255, 255, 255, 0.62);
 
-  /* Brand (tu azul) */
-  --brand: #2628dd;
-  --brand-1: rgba(38, 40, 221, 0.35);
-  --brand-2: rgba(38, 40, 221, 0.18);
+  --brand: #f0b35a;
+  --brand-1: rgba(240, 179, 90, 0.30);
+  --brand-2: rgba(240, 179, 90, 0.14);
 }
 
 html,
@@ -29,56 +28,174 @@ body {
 
 .necotec-bg {
   background:
-    radial-gradient(900px circle at 50% 30%, rgba(38, 40, 221, 0.28), transparent 55%),
-    radial-gradient(700px circle at 50% 60%, rgba(38, 40, 221, 0.14), transparent 60%),
-    radial-gradient(1100px circle at 15% 20%, rgba(38, 40, 221, 0.10), transparent 55%),
-    radial-gradient(1100px circle at 85% 80%, rgba(38, 40, 221, 0.08), transparent 60%),
-    linear-gradient(180deg, #070816 0%, #0b0d16 60%, #070816 100%);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    radial-gradient(900px circle at 85% 5%, rgba(240, 179, 90, 0.11), transparent 45%),
+    linear-gradient(180deg, #101114 0%, #090a0c 48%, #07080a 100%);
+  background-size: 48px 48px, 48px 48px, auto, auto;
 }
 
 .card {
   position: relative;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 16px 24px rgba(0, 0, 0, 0.5);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
 }
 
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 18px 42px rgba(38, 40, 221, 0.18);
-  border-color: rgba(38, 40, 221, 0.22);
+.panel {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
 }
 
-.card::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: 18px;
-  background: radial-gradient(
-    520px circle at center,
-    rgba(38, 40, 221, 0.28) 0%,
-    rgba(38, 40, 221, 0.14) 42%,
-    transparent 78%
-  );
-  opacity: 0.0;
-  transition: opacity 0.25s ease;
-  pointer-events: none;
-  z-index: 0;
+.btn {
+  @apply inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
 }
 
-.card:hover::before {
-  opacity: 1;
+.btn-primary {
+  @apply border-amber-400/70 bg-amber-400 text-black hover:bg-amber-300;
 }
 
-.card > * {
-  position: relative;
-  z-index: 1;
+.btn-secondary {
+  @apply border-white/10 bg-white/[0.04] text-white/80 hover:bg-white/[0.08];
 }
-
 
 .input {
-  @apply w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/85 outline-none focus:border-white/20;
+  @apply w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white/85 outline-none transition focus:border-amber-300/50;
+}
+
+.modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(12px);
+}
+
+.modal-panel {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  display: flex;
+  width: 100%;
+  max-height: 92dvh;
+  flex-direction: column;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 24px 24px 0 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025)),
+    #111214;
+  box-shadow: 0 -18px 70px rgba(0, 0, 0, 0.55);
+}
+
+.modal-panel-wide {
+  max-width: 56rem;
+}
+
+.modal-drag {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.75rem;
+  padding-bottom: 0.25rem;
+}
+
+.modal-drag::before {
+  content: "";
+  height: 0.25rem;
+  width: 2.5rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.modal-header,
+.modal-footer {
+  position: relative;
+  border-color: rgba(255, 255, 255, 0.10);
+  padding: 1rem;
+}
+
+.modal-header {
+  border-bottom-width: 1px;
+}
+
+.modal-footer {
+  border-top-width: 1px;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.modal-body {
+  position: relative;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1rem;
+}
+
+.modal-close {
+  display: inline-flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.76);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.field-label {
+  margin-bottom: 0.375rem;
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.select-input {
+  @apply rounded-lg border border-white/10 bg-[#111214] px-3 py-2 text-sm text-white/85 outline-none transition focus:border-amber-300/50;
+}
+
+@media (min-width: 640px) {
+  .modal-panel {
+    inset-inline: auto;
+    bottom: auto;
+    left: 50%;
+    top: 50%;
+    width: 92vw;
+    max-width: 42rem;
+    max-height: 86vh;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    box-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
+  }
+
+  .modal-panel-wide {
+    max-width: 56rem;
+  }
+
+  .modal-drag {
+    display: none;
+  }
+
+  .modal-header,
+  .modal-footer,
+  .modal-body {
+    padding: 1.25rem;
+  }
 }

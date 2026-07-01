@@ -3,31 +3,18 @@ import { Topbar } from "./Topbar";
 
 export function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="h-screen necotec-bg overflow-hidden">
-      <div className="mx-auto w-full h-full px-4 py-6 2xl:px-8">
-        <div className="card h-full flex overflow-hidden">
-          
-          {/* SIDEBAR */}
-          <aside className="hidden md:flex md:w-64 border-r border-white/10">
-            <div className="sticky top-0 h-full w-full">
-              <Sidebar />
-            </div>
-          </aside>
+    <div className="h-screen overflow-hidden necotec-bg">
+      <div className="flex h-full">
+        <Sidebar />
 
-          {/* MAIN */}
-          <div className="flex flex-1 flex-col">
-            
-            {/* TOPBAR */}
-            <div className="border-b border-white/10">
-              <Topbar />
-            </div>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Topbar />
 
-            {/* CONTENT SCROLL */}
-            <main className="flex-1 overflow-y-auto p-5 md:p-6">
-              {children}
-            </main>
-          </div>
+          <main className="flex-1 overflow-y-auto px-4 py-5 pb-24 sm:px-6 lg:px-8 lg:py-7 md:pb-7">
+            <div className="mx-auto w-full max-w-7xl">{children}</div>
+          </main>
 
+          <Sidebar variant="mobile" />
         </div>
       </div>
     </div>

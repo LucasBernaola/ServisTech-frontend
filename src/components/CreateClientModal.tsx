@@ -1,19 +1,20 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Portal } from "./Portal"
-import { createClienteClient } from "@/lib/api/clients.client"
-import { getErrorMessage } from "@/lib/api/http"
+import { useEffect, useState } from "react";
+import { X } from "lucide-react";
+import { Portal } from "./Portal";
+import { createClienteClient } from "@/lib/api/clients.client";
+import { getErrorMessage } from "@/lib/api/http";
 
 type Props = {
-  apiBaseUrl: string
-  onClose: () => void
-  onCreated: () => void
-}
+  apiBaseUrl: string;
+  onClose: () => void;
+  onCreated: () => void;
+};
 
 export default function CreateClientModal({ apiBaseUrl, onClose, onCreated }: Props) {
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     nombre: "",
@@ -22,89 +23,88 @@ export default function CreateClientModal({ apiBaseUrl, onClose, onCreated }: Pr
     celular: "",
     email: "",
     direccion: "",
-  })
+  });
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !busy) onClose();
+    };
+
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [busy, onClose]);
 
   function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
-    setForm((p) => ({ ...p, [key]: value }))
+    setForm((p) => ({ ...p, [key]: value }));
   }
 
   async function submit() {
-    setBusy(true)
-    setError(null)
+    setBusy(true);
+    setError(null);
     try {
-      await createClienteClient(apiBaseUrl, form)
-
-      onCreated()
+      await createClienteClient(apiBaseUrl, form);
+      onCreated();
     } catch (e: unknown) {
-      setError(getErrorMessage(e, "Error creando cliente"))
+      setError(getErrorMessage(e, "Error creando cliente"));
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
   }
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-[9999]">
-        {/* overlay */}
-        <div
-          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-          onClick={() => !busy && onClose()}
-        />
+      <div className="modal-root">
+        <div className="modal-overlay" onClick={() => !busy && onClose()} />
 
-        {/* modal */}
-        <div
-          className="
-          absolute left-1/2 top-1/2 w-[95vw] sm:w-[92vw] max-w-2xl
-          -translate-x-1/2 -translate-y-1/2
-          rounded-2xl border border-white/15 bg-[#101827]
-          shadow-[0_20px_80px_rgba(0,0,0,0.65)]
-          max-h-[90vh] flex flex-col overflow-hidden
-        "
-        >
-          {/* HEADER */}
-          <div className="p-4 sm:p-5 border-b border-white/10">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div>
-                <h2 className="text-base sm:text-lg font-semibold text-white">
+        <div className="modal-panel">
+          <div className="modal-drag" />
+
+          <div className="modal-header">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-amber-200/70">
+                  Clientes
+                </p>
+                <h2 className="mt-1 text-lg font-semibold text-white">
                   Nuevo cliente
                 </h2>
-                <p className="text-xs sm:text-sm text-white/60">
-                  Completá los datos básicos del cliente.
+                <p className="mt-1 text-sm text-white/50">
+                  Carga los datos basicos para asociarlo a futuras ordenes.
                 </p>
               </div>
 
               <button
+                type="button"
                 onClick={() => !busy && onClose()}
-                className="self-end sm:self-auto rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10"
+                className="modal-close"
+                aria-label="Cerrar"
               >
-                Cerrar
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            {error && (
-              <div className="mt-4 rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
+            {error ? (
+              <div className="mt-4 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
                 {error}
               </div>
-            )}
+            ) : null}
           </div>
 
-          {/* BODY */}
-          <div className="p-4 sm:p-5 overflow-y-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="modal-body">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input label="Nombre" value={form.nombre} onChange={(v) => set("nombre", v)} />
               <Input label="Apellido" value={form.apellido} onChange={(v) => set("apellido", v)} />
               <Input label="DNI" value={form.dni} onChange={(v) => set("dni", v)} />
               <Input label="Celular" value={form.celular} onChange={(v) => set("celular", v)} />
-
+              <Input label="Email" value={form.email} onChange={(v) => set("email", v)} full />
               <Input
-                label="Email (opcional)"
-                value={form.email}
-                onChange={(v) => set("email", v)}
-                full
-              />
-
-              <Input
-                label="Dirección (opcional)"
+                label="Direccion"
                 value={form.direccion}
                 onChange={(v) => set("direccion", v)}
                 full
@@ -112,11 +112,10 @@ export default function CreateClientModal({ apiBaseUrl, onClose, onCreated }: Pr
             </div>
           </div>
 
-          {/* FOOTER */}
-          <div className="p-4 sm:p-5 border-t border-white/10 flex flex-col sm:flex-row gap-2 sm:justify-end">
+          <div className="modal-footer flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button
               onClick={() => !busy && onClose()}
-              className="w-full sm:w-auto rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 hover:bg-white/10 disabled:opacity-40"
+              className="btn btn-secondary w-full sm:w-auto"
               disabled={busy}
             >
               Cancelar
@@ -124,7 +123,7 @@ export default function CreateClientModal({ apiBaseUrl, onClose, onCreated }: Pr
 
             <button
               onClick={submit}
-              className="w-full sm:w-auto rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/15 disabled:opacity-40"
+              className="btn btn-primary w-full sm:w-auto"
               disabled={busy}
             >
               {busy ? "Creando..." : "Crear cliente"}
@@ -133,33 +132,24 @@ export default function CreateClientModal({ apiBaseUrl, onClose, onCreated }: Pr
         </div>
       </div>
     </Portal>
-  )
+  );
 }
 
-/* 🔹 Input reutilizable */
 function Input({
   label,
   value,
   onChange,
   full = false,
 }: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  full?: boolean
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  full?: boolean;
 }) {
   return (
-    <div className={`space-y-1 ${full ? "sm:col-span-2" : ""}`}>
-      <div className="text-xs font-medium text-white/60">{label}</div>
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="
-          w-full rounded-xl border border-white/10 bg-white/5
-          px-3 py-2.5 text-sm text-white/85 outline-none
-          focus:border-white/20
-        "
-      />
-    </div>
-  )
+    <label className={full ? "sm:col-span-2" : undefined}>
+      <span className="field-label">{label}</span>
+      <input value={value} onChange={(e) => onChange(e.target.value)} className="input" />
+    </label>
+  );
 }

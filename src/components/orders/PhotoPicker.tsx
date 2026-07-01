@@ -43,7 +43,7 @@ export function PhotoPicker({
   };
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+    <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="text-sm font-medium text-white/85">
@@ -54,8 +54,8 @@ export function PhotoPicker({
           </div>
         </div>
 
-        <label className="cursor-pointer flex-shrink-0 rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-xs text-white/80 hover:bg-white/15 active:bg-white/20 transition-colors">
-          + Agregar
+        <label className="btn btn-secondary cursor-pointer flex-shrink-0 px-3 py-2 text-xs">
+          Agregar
           <input
             type="file"
             accept="image/*"
@@ -71,7 +71,7 @@ export function PhotoPicker({
           En mobile el área vacía también sirve de zona táctil de pick,
           más cómoda que el botón chico.
         */
-        <label className="mt-3 flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/15 bg-black/20 p-6 text-center transition hover:border-white/25 hover:bg-black/30 active:bg-black/40">
+        <label className="mt-3 flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-white/15 bg-black/20 p-6 text-center transition hover:border-amber-300/35 hover:bg-black/30 active:bg-black/40">
           <Camera className="h-7 w-7 text-white/45" />
           <span className="text-xs text-white/50">
             Sin fotos — tocá para agregar
@@ -96,7 +96,7 @@ export function PhotoPicker({
             {files.map((f, i) => (
               <div
                 key={`${f.name}-${i}`}
-                className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/20"
+                className="group relative overflow-hidden rounded-lg border border-white/10 bg-black/20"
               >
                 <Image
                   src={previews[i]}
@@ -140,7 +140,7 @@ export function PhotoPicker({
 
           {/* Botón secundario para agregar más fotos cuando ya hay algunas */}
           {files.length < maxFiles && (
-            <label className="mt-2.5 flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/15 py-2.5 text-xs text-white/50 transition hover:border-white/25 hover:text-white/70 active:bg-white/5">
+            <label className="mt-2.5 flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-dashed border-white/15 py-2.5 text-xs text-white/50 transition hover:border-amber-300/35 hover:text-white/70 active:bg-white/5">
               + Agregar más fotos ({files.length}/{maxFiles})
               <input
                 type="file"

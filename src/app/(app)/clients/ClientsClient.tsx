@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ClientsTable from "@/components/ClientsTable";
 import CreateClientModal from "@/components/CreateClientModal";
@@ -29,7 +30,6 @@ export default function ClientsClient({
   const sp = useSearchParams();
 
   const [ordering, setOrdering] = useState(initialOrdering || "apellido");
-
   const [searchInput, setSearchInput] = useState(initialSearch || "");
   const [searchValue, setSearchValue] = useState(initialSearch || "");
 
@@ -40,10 +40,8 @@ export default function ClientsClient({
 
   const skipNextDebounceRef = useRef(false);
   const firstRenderRef = useRef(true);
-
   const [openCreate, setOpenCreate] = useState(false);
 
-  // Autocomplete
   const [openSug, setOpenSug] = useState(false);
   const [sugLoading, setSugLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<Cliente[]>([]);
@@ -99,7 +97,6 @@ export default function ClientsClient({
     return () => clearTimeout(t);
   }, [searchValue, ordering, replaceParams]);
 
-  // Autocomplete
   useEffect(() => {
     const q = searchInput.trim();
     setHighlight(-1);
@@ -141,26 +138,22 @@ export default function ClientsClient({
   }, []);
 
   function labelCliente(c: Cliente) {
-    const nombre = `${c.nombre || ""} ${c.apellido || ""}`.trim() || "—";
+    const nombre = `${c.nombre || ""} ${c.apellido || ""}`.trim() || "-";
     const extra = [c.dni ? `DNI ${c.dni}` : null, c.celular]
       .filter(Boolean)
-      .join(" • ");
+      .join(" · ");
     return { nombre, extra };
   }
 
   function pickSuggestion(c: Cliente) {
-    const nombreApellido =
-      `${c.nombre || ""} ${c.apellido || ""}`.trim() || "—";
-
+    const nombreApellido = `${c.nombre || ""} ${c.apellido || ""}`.trim() || "-";
     const safeValue = (
       c.dni?.toString().trim() ||
       c.celular?.toString().trim() ||
       nombreApellido
     ).trim();
 
-    const nextDisplay = isDigitsOnly(searchInput)
-      ? safeValue
-      : nombreApellido;
+    const nextDisplay = isDigitsOnly(searchInput) ? safeValue : nombreApellido;
 
     setSearchInput(nextDisplay);
     setSearchValue(safeValue);
@@ -205,128 +198,122 @@ export default function ClientsClient({
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-5">
-      {/* Header */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-lg sm:text-xl font-semibold text-white">
-            Clientes
-          </h1>
-          <p className="text-xs sm:text-sm text-white/60">
-            Autocompletado + filtro en vivo.
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-amber-200/70">
+            Agenda tecnica
+          </p>
+          <h2 className="mt-1 text-xl font-semibold text-white">Clientes</h2>
+          <p className="mt-1 text-sm text-white/50">
+            Busca por nombre, DNI o celular y mantenelos listos para nuevas ordenes.
           </p>
         </div>
 
         <button
           onClick={() => setOpenCreate(true)}
-          className="w-full sm:w-auto rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/15 transition"
+          className="btn btn-primary w-full gap-2 sm:w-auto"
         >
-          + Nuevo cliente
+          <Plus className="h-4 w-4" />
+          Nuevo cliente
         </button>
       </div>
 
-      {/* Search */}
-      <div className="mb-4" ref={wrapRef}>
-        <div className="relative">
-          <input
-            ref={inputRef}
-            value={searchInput}
-            onChange={(e) => {
-              const v = e.target.value;
-              setSearchInput(v);
-              setSearchValue(v);
-              setOpenSug(true);
-            }}
-            onFocus={() => suggestions.length && setOpenSug(true)}
-            onKeyDown={onKeyDown}
-            placeholder="Buscar por nombre, DNI o celular..."
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white/85 outline-none focus:border-white/20"
-          />
+      <section className="panel overflow-visible">
+        <div className="border-b border-white/10 p-4" ref={wrapRef}>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/35" />
+            <input
+              ref={inputRef}
+              value={searchInput}
+              onChange={(e) => {
+                const v = e.target.value;
+                setSearchInput(v);
+                setSearchValue(v);
+                setOpenSug(true);
+              }}
+              onFocus={() => suggestions.length && setOpenSug(true)}
+              onKeyDown={onKeyDown}
+              placeholder="Buscar por nombre, DNI o celular..."
+              className="input pl-10"
+            />
 
-          {sugLoading && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/50">
-              Buscando…
-            </div>
-          )}
+            {sugLoading ? (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/45">
+                Buscando...
+              </div>
+            ) : null}
 
-          {openSug && (suggestions.length > 0 || sugLoading) && (
-            <div className="absolute z-50 mt-2 w-full rounded-2xl border border-white/15 bg-[#101827] shadow-xl">
-              <div className="max-h-64 overflow-y-auto p-1">
-                {suggestions.map((c, idx) => {
-                  const { nombre, extra } = labelCliente(c);
-                  const active = idx === highlight;
+            {openSug && (suggestions.length > 0 || sugLoading) ? (
+              <div className="absolute z-50 mt-2 w-full rounded-xl border border-white/15 bg-[#111214] shadow-2xl shadow-black/40">
+                <div className="max-h-64 overflow-y-auto p-1">
+                  {suggestions.map((c, idx) => {
+                    const { nombre, extra } = labelCliente(c);
+                    const active = idx === highlight;
 
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onMouseEnter={() => setHighlight(idx)}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        pickSuggestion(c);
-                      }}
-                      className={`w-full rounded-xl px-3 py-2 text-left ${
-                        active ? "bg-white/10" : "hover:bg-white/5"
-                      }`}
-                    >
-                      <div className="text-sm text-white/85">{nombre}</div>
-                      {extra && (
-                        <div className="text-xs text-white/50">{extra}</div>
-                      )}
-                    </button>
-                  );
-                })}
-
-                <div className="px-3 py-2 text-xs text-white/40">
-                  Tip: Enter selecciona
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onMouseEnter={() => setHighlight(idx)}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          pickSuggestion(c);
+                        }}
+                        className={`w-full rounded-lg px-3 py-2 text-left ${
+                          active ? "bg-amber-300/12" : "hover:bg-white/[0.05]"
+                        }`}
+                      >
+                        <div className="text-sm text-white/85">{nombre}</div>
+                        {extra ? (
+                          <div className="text-xs text-white/45">{extra}</div>
+                        ) : null}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+            ) : null}
+          </div>
+
+          {searchInput ? (
+            <div className="mt-3">
+              <button
+                onClick={() => {
+                  setSearchInput("");
+                  setSearchValue("");
+                  setSuggestions([]);
+                  setOpenSug(false);
+
+                  skipNextDebounceRef.current = true;
+                  replaceParams({ search: null, page: 1, ordering });
+
+                  requestAnimationFrame(() => inputRef.current?.focus());
+                }}
+                className="btn btn-secondary px-3 py-1.5 text-xs"
+              >
+                Limpiar busqueda
+              </button>
             </div>
-          )}
+          ) : null}
         </div>
 
-        {searchInput && (
-          <div className="mt-2">
-            <button
-              onClick={() => {
-                setSearchInput("");
-                setSearchValue("");
-                setSuggestions([]);
-                setOpenSug(false);
+        <div className="p-4">
+          <ClientsTable
+            apiBaseUrl={apiBaseUrl}
+            rows={initialData?.results || []}
+            count={initialData?.count || 0}
+            page={initialPage}
+            totalPages={totalPages}
+            ordering={ordering}
+            onToggleOrdering={toggleOrdering}
+            onPageChange={(p: number) => replaceParams({ page: p, ordering })}
+            onRefresh={() => router.refresh()}
+          />
+        </div>
+      </section>
 
-                skipNextDebounceRef.current = true;
-                replaceParams({ search: null, page: 1, ordering });
-
-                requestAnimationFrame(() => inputRef.current?.focus());
-              }}
-              className="w-full sm:w-auto rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 transition"
-            >
-              Limpiar
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <ClientsTable
-          apiBaseUrl={apiBaseUrl}
-          rows={initialData?.results || []
-}
-          count={initialData?.count || 0}
-          page={initialPage}
-          totalPages={totalPages}
-          ordering={ordering}
-          onToggleOrdering={toggleOrdering}
-          onPageChange={(p: number) =>
-            replaceParams({ page: p, ordering })
-          }
-          onRefresh={() => router.refresh()}
-        />
-      </div>
-
-      {/* Modal */}
-      {openCreate && (
+      {openCreate ? (
         <CreateClientModal
           apiBaseUrl={apiBaseUrl}
           onClose={() => setOpenCreate(false)}
@@ -335,7 +322,7 @@ export default function ClientsClient({
             router.refresh();
           }}
         />
-      )}
+      ) : null}
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import React from "react";
 import type { CSSProperties } from "react";
+import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type CreateOrdenInput } from "@/lib/api/orders";
 import {
@@ -27,8 +28,7 @@ type CreateOrdenInputMoney = CreateOrdenInput & {
 const darkSelectStyle: CSSProperties = { colorScheme: "dark" };
 
 // Clases compartidas para inputs y textareas
-const inputCls =
-  "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 sm:py-2 text-sm text-white/85 outline-none focus:border-white/20 placeholder:text-white/35";
+const inputCls = "input placeholder:text-white/35";
 
 export function CreateOrderModal({
   apiBaseUrl,
@@ -158,10 +158,10 @@ export function CreateOrderModal({
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-[9999]">
+      <div className="modal-root">
         {/* Overlay */}
         <div
-          className="absolute inset-0 bg-black/60 backdrop-blur-md"
+          className="modal-overlay"
           onClick={() => !busy && onClose()}
         />
 
@@ -172,29 +172,12 @@ export function CreateOrderModal({
           - sm+: centrado con translate como antes.
         */}
         <div
-          className="
-            absolute
-            inset-x-0 bottom-0 sm:inset-auto
-            sm:left-1/2 sm:top-1/2
-            sm:-translate-x-1/2 sm:-translate-y-1/2
-            w-full sm:w-[92vw] sm:max-w-2xl
-            rounded-t-3xl sm:rounded-2xl
-            border-t border-white/15 sm:border
-            bg-[#101827]
-            shadow-[0_-10px_60px_rgba(0,0,0,0.5)] sm:shadow-[0_20px_80px_rgba(0,0,0,0.65)]
-            max-h-[92dvh] sm:max-h-[85vh]
-            flex flex-col overflow-hidden
-          "
+          className="modal-panel modal-panel-wide"
         >
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/5 to-transparent rounded-t-3xl sm:rounded-2xl" />
-
-          {/* Pill de arrastre (solo mobile) */}
-          <div className="sm:hidden flex justify-center pt-3 pb-1 relative">
-            <div className="h-1 w-10 rounded-full bg-white/20" />
-          </div>
+          <div className="modal-drag" />
 
           {/* Header */}
-          <div className="relative px-4 py-3 sm:p-5 border-b border-white/10">
+          <div className="modal-header">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-base sm:text-lg font-semibold text-white">
@@ -207,22 +190,24 @@ export function CreateOrderModal({
               </div>
 
               <button
+                type="button"
                 onClick={() => !busy && onClose()}
-                className="flex-shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 active:bg-white/15 transition-colors"
+                className="modal-close"
+                aria-label="Cerrar"
               >
-                Cerrar
+                <X className="h-4 w-4" />
               </button>
             </div>
 
             {error ? (
-              <div className="mt-3 rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
+              <div className="mt-4 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
                 {error}
               </div>
             ) : null}
           </div>
 
           {/* Body scrolleable */}
-          <div className="relative px-4 py-4 sm:p-5 overflow-y-auto overscroll-contain">
+          <div className="modal-body">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
               <Field label="Tipo de dispositivo">
@@ -373,7 +358,7 @@ export function CreateOrderModal({
                       set("bloqueo_tipo", next);
                       if (next === "none") set("bloqueo_valor", "");
                     }}
-                    className="w-full sm:w-auto rounded-xl border border-white/10 bg-[#0f172a] px-3 py-2.5 sm:py-2 text-sm text-white/85 outline-none focus:border-white/20"
+                    className="select-input w-full sm:w-auto"
                     style={darkSelectStyle}
                   >
                     <option className="bg-[#0f172a] text-white" value="none">
@@ -429,17 +414,17 @@ export function CreateOrderModal({
           </div>
 
           {/* Footer */}
-          <div className="relative px-4 py-3 sm:p-5 border-t border-white/10 flex items-center justify-end gap-2">
+          <div className="modal-footer flex items-center justify-end gap-2">
             <button
               onClick={() => !busy && onClose()}
-              className="flex-1 sm:flex-none rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 sm:py-2 text-sm text-white/80 hover:bg-white/10 active:bg-white/15 disabled:opacity-40 transition-colors"
+              className="btn btn-secondary flex-1 sm:flex-none"
               disabled={busy}
             >
               Cancelar
             </button>
             <button
               onClick={submit}
-              className="flex-1 sm:flex-none rounded-xl border border-white/10 bg-white/10 px-4 py-2.5 sm:py-2 text-sm text-white hover:bg-white/15 active:bg-white/20 disabled:opacity-40 transition-colors"
+              className="btn btn-primary flex-1 sm:flex-none"
               disabled={busy}
             >
               {busy ? "Creando..." : "Crear orden"}
@@ -450,7 +435,6 @@ export function CreateOrderModal({
     </Portal>
   );
 }
-
 function Field({
   label,
   children,

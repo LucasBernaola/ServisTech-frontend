@@ -2,12 +2,43 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  ArrowRight,
+  ClipboardList,
+  FileText,
+  ShieldCheck,
+  Smartphone,
+  Users,
+} from "lucide-react";
 import { LoginModal } from "@/components/LoginModal";
 
 type SessionUser = {
   username?: string;
   email?: string;
 };
+
+const modules = [
+  {
+    title: "Órdenes técnicas",
+    description: "Registro, diagnóstico, estados y cierre de reparaciones.",
+    icon: ClipboardList,
+  },
+  {
+    title: "Clientes",
+    description: "Búsqueda, alta y edición de datos de contacto.",
+    icon: Users,
+  },
+  {
+    title: "Seguimiento público",
+    description: "Consulta externa por token para ver el avance del equipo.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Ficha e impresión",
+    description: "Documentación imprimible para recepción y trabajo técnico.",
+    icon: FileText,
+  },
+];
 
 export default function PublicHome() {
   const [open, setOpen] = useState(false);
@@ -36,106 +67,177 @@ export default function PublicHome() {
     };
   }, []);
 
-  const services = [
-    "Cambio de módulo",
-    "Pin / centro de carga",
-    "Diagnóstico y reparación",
-    "Limpieza y mantenimiento",
-  ];
-
   const adminUrl = process.env.NEXT_PUBLIC_API_URL
     ? `${process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "")}/admin/`
     : "/admin";
 
   return (
-    <div className="min-h-screen necotec-bg">
-      <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-10 min-h-screen flex flex-col">
-        <div className="pt-6 sm:pt-8 flex justify-end">
-          {user ? (
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="cursor-pointer rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs sm:text-sm text-white/85 hover:bg-white/8 transition"
+    <div className="min-h-screen overflow-hidden bg-[#080a0e] text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_18%,rgba(242,189,75,0.16),transparent_32%),radial-gradient(circle_at_18%_78%,rgba(95,111,138,0.16),transparent_34%),linear-gradient(135deg,#080a0e_0%,#111722_48%,#090b10_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />
+      </div>
+
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[1440px] flex-col px-4 sm:px-6 lg:px-10">
+        <header className="flex items-center justify-between py-5 sm:py-7">
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className="flex items-center gap-3 text-left"
+            aria-label="ServisTech"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-amber-300/25 bg-amber-300 text-sm font-black text-[#15100a] shadow-[0_0_34px_rgba(242,189,75,0.24)]">
+              ST
+            </span>
+            <span>
+              <span className="block text-sm font-semibold tracking-wide text-white">
+                ServisTech
+              </span>
+              <span className="block text-xs text-white/45">
+                Gestión para taller técnico
+              </span>
+            </span>
+          </button>
+
+          <div className="flex items-center gap-2">
+            <a
+              href={adminUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/60 transition hover:border-white/20 hover:text-white sm:inline-flex"
             >
-              Ir al panel
-            </button>
-          ) : (
-            <button
-              onClick={() => setOpen(true)}
-              className="cursor-pointer rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs sm:text-sm text-white/85 hover:bg-white/8 transition"
-            >
-              Ingresar
-            </button>
-          )}
-        </div>
+              Administración
+            </a>
 
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-full flex flex-col items-center justify-center text-center">
-            <div className="leading-none select-none flex flex-col w-fit text-center">
-              <div
-                className="text-4xl sm:text-6xl md:text-7xl lg:text-[8rem] xl:text-[9.5rem] font-extrabold tracking-tight text-transparent"
-                style={{
-                  WebkitTextStroke: "2px rgba(255,255,255,0.75)",
-                  textShadow:
-                    "0 0 18px rgba(255,255,255,0.12), 0 0 40px rgba(255,255,255,0.06)",
-                }}
+            {user ? (
+              <button
+                type="button"
+                onClick={() => router.push("/dashboard")}
+                className="inline-flex items-center gap-2 rounded-lg border border-amber-300/30 bg-amber-300 px-4 py-2 text-xs font-semibold text-[#15100a] transition hover:bg-amber-200"
               >
-                SERVIS
-              </div>
-
-              <div
-                className="mt-3 sm:mt-4 md:mt-6 text-4xl sm:text-6xl md:text-7xl lg:text-[8rem] xl:text-[9.5rem] font-extrabold tracking-tight text-transparent"
-                style={{
-                  WebkitTextStroke: "2px rgba(255,255,255,0.65)",
-                  textShadow:
-                    "0 0 18px rgba(255,255,255,0.10), 0 0 40px rgba(255,255,255,0.05)",
-                }}
+                Ir al panel
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className="inline-flex items-center gap-2 rounded-lg border border-amber-300/30 bg-amber-300 px-4 py-2 text-xs font-semibold text-[#15100a] transition hover:bg-amber-200"
               >
-                TECH
-              </div>
+                Ingresar
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        </header>
 
-              <div className="mt-4 sm:mt-6 text-[10px] sm:text-xs text-white/45 tracking-[0.25em] sm:tracking-[0.35em] uppercase">
-                SERVICIO TÉCNICO
-              </div>
+        <main className="grid flex-1 items-center gap-10 py-8 lg:grid-cols-[1.05fr_0.95fr] lg:py-14">
+          <section className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/60">
+              <Smartphone className="h-3.5 w-3.5 text-amber-200" />
+              Sistema de gestión para reparaciones técnicas
             </div>
 
-            <div className="mt-6 sm:mt-8 w-full flex justify-center">
-              <div className="max-w-5xl text-[11px] sm:text-sm md:text-base text-white/70">
-                <ul className="flex flex-wrap items-center justify-center gap-y-1 sm:gap-y-2">
-                  {services.map((service, index) => (
-                    <li key={service} className="flex items-center">
-                      <span>{service}</span>
-                      {index !== services.length - 1 ? (
-                        <span className="mx-2 sm:mx-3 text-white/30">-</span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            <h1 className="mt-6 max-w-3xl text-5xl font-black leading-[0.95] tracking-normal text-white sm:text-6xl lg:text-7xl">
+              Controlá tu taller sin perder el ritmo del banco de trabajo.
+            </h1>
+
+            <p className="mt-6 max-w-2xl text-base leading-7 text-white/62 sm:text-lg">
+              ServisTech organiza órdenes, clientes, estados de reparación,
+              fichas imprimibles y seguimiento público en una interfaz pensada
+              para el día a día de un servicio técnico.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => (user ? router.push("/dashboard") : setOpen(true))}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-amber-300 px-5 text-sm font-semibold text-[#15100a] transition hover:bg-amber-200"
+              >
+                {user ? "Abrir panel" : "Acceder al sistema"}
+                <ArrowRight className="h-4 w-4" />
+              </button>
+
+              <a
+                href={adminUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-11 items-center justify-center rounded-lg border border-white/12 bg-white/[0.035] px-5 text-sm font-medium text-white/75 transition hover:border-white/22 hover:bg-white/[0.06] hover:text-white"
+              >
+                Admin Django
+              </a>
             </div>
 
             {user ? (
-              <div className="mt-4 sm:mt-6 text-xs sm:text-sm text-white/60">
-                Hola,{" "}
-                <span className="text-white/85">
+              <div className="mt-5 text-sm text-white/50">
+                Sesión activa como{" "}
+                <span className="font-medium text-white/80">
                   {user.username || user.email}
                 </span>
               </div>
             ) : null}
-          </div>
-        </div>
+          </section>
 
-        <div className="pb-6 sm:pb-8 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0 text-center sm:text-left">
-          <a
-            href={adminUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-white/50 hover:text-white/80 transition"
-          >
-            Administración
-          </a>
+          <section className="rounded-2xl border border-white/10 bg-[#111722]/85 p-3 shadow-[0_24px_80px_rgba(0,0,0,0.46)] backdrop-blur">
+            <div className="rounded-xl border border-white/8 bg-[#0d1119]">
+              <div className="flex items-center justify-between border-b border-white/8 px-4 py-3">
+                <div>
+                  <div className="text-sm font-semibold text-white">
+                    Operación del taller
+                  </div>
+                  <div className="text-xs text-white/42">
+                    Flujo real del sistema
+                  </div>
+                </div>
+                <div className="rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1 text-xs text-amber-100">
+                  Activo
+                </div>
+              </div>
 
-          <div className="text-xs text-white/50">© ServisTech - 2026</div>
-        </div>
+              <div className="grid gap-3 p-3 sm:grid-cols-2">
+                {modules.map((module) => (
+                  <div
+                    key={module.title}
+                    className="rounded-lg border border-white/8 bg-white/[0.035] p-4"
+                  >
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-amber-300/20 bg-amber-300/10 text-amber-200">
+                      <module.icon className="h-4 w-4" />
+                    </div>
+                    <div className="mt-4 text-sm font-semibold text-white">
+                      {module.title}
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-white/52">
+                      {module.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t border-white/8 p-3">
+                <div className="rounded-lg border border-white/8 bg-black/20 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-white">
+                        Flujo principal
+                      </div>
+                      <div className="mt-1 text-xs text-white/45">
+                        Recibir equipo → diagnosticar → reparar → finalizar → retirar
+                      </div>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-white/10 sm:w-32">
+                      <div className="h-full w-3/4 rounded-full bg-amber-300" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <footer className="flex flex-col items-center justify-between gap-3 border-t border-white/8 py-5 text-xs text-white/42 sm:flex-row">
+          <span>© ServisTech - 2026</span>
+          <span>Órdenes, clientes y seguimiento técnico en un solo panel.</span>
+        </footer>
 
         <LoginModal open={open} onOpenChange={setOpen} />
       </div>

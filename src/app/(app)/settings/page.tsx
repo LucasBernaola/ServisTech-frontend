@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Pencil, Check, Eye, EyeOff } from "lucide-react";
+import { Check, Eye, EyeOff, Pencil, ShieldCheck } from "lucide-react";
 import { apiRequest, getErrorMessage } from "@/lib/api/http";
 
 type Profile = {
@@ -17,20 +17,21 @@ type Profile = {
 
 type EditableKey = "username" | "email" | "first_name" | "last_name";
 
-function Alert({ type, text }: { type: "success" | "error" | "info"; text: string }) {
-  const base = "rounded-xl border px-4 py-3 text-sm whitespace-pre-line";
+function Alert({ type, text }: { type: "success" | "error"; text: string }) {
   const cls =
     type === "success"
-      ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"
-      : type === "error"
-      ? "border-red-400/25 bg-red-400/10 text-red-200"
-      : "border-white/15 bg-white/5 text-white/70";
-  return <div className={`${base} ${cls}`}>{text}</div>;
+      ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-100"
+      : "border-red-400/25 bg-red-400/10 text-red-100";
+
+  return (
+    <div className={`rounded-lg border px-4 py-3 text-sm whitespace-pre-line ${cls}`}>
+      {text}
+    </div>
+  );
 }
 
 function EditableInput(props: {
   label: string;
-  hint?: string;
   value: string;
   type?: string;
   placeholder?: string;
@@ -41,7 +42,6 @@ function EditableInput(props: {
 }) {
   const {
     label,
-    hint,
     value,
     type = "text",
     placeholder,
@@ -52,17 +52,11 @@ function EditableInput(props: {
   } = props;
 
   return (
-    <div>
-      <div className="flex justify-between text-sm">
-        <span className="text-white/80">{label}</span>
-        {hint && <span className="text-white/50 text-xs">{hint}</span>}
-      </div>
-
-      <div className="mt-2 relative">
+    <label className="block">
+      <span className="text-sm text-white/70">{label}</span>
+      <div className="relative mt-2">
         <input
-          className={`w-full rounded-xl px-3 py-2 pr-11 text-sm border bg-white/5 transition
-          ${editable ? "border-white/30" : "border-white/15"}
-          focus:ring-2 focus:ring-white/10`}
+          className={`input pr-11 ${editable ? "border-amber-300/45" : ""}`}
           readOnly={!editable}
           value={value}
           type={type}
@@ -74,44 +68,41 @@ function EditableInput(props: {
         <button
           type="button"
           onClick={onToggleEditable}
-          className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-lg border border-white/10 bg-white/5 grid place-items-center"
+          className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg border border-white/10 bg-white/[0.04] text-white/70 transition hover:bg-white/[0.08]"
+          aria-label={editable ? "Confirmar edicion" : "Editar campo"}
         >
           {editable ? (
             <Check className="h-4 w-4 text-emerald-300" />
           ) : (
-            <Pencil className="h-4 w-4 text-white/70" />
+            <Pencil className="h-4 w-4" />
           )}
         </button>
       </div>
-    </div>
+    </label>
   );
 }
 
 function PasswordInput({
   label,
-  value = "",
+  value,
   onChange,
-  readOnly,
   autoComplete,
 }: {
   label: string;
-  value?: string;
-  onChange?: (value: string) => void;
-  readOnly?: boolean;
+  value: string;
+  onChange: (value: string) => void;
   autoComplete?: string;
 }) {
   const [show, setShow] = useState(false);
 
   return (
-    <div>
-      <span className="text-sm text-white/80">{label}</span>
-
-      <div className="mt-2 relative">
+    <label className="block">
+      <span className="text-sm text-white/70">{label}</span>
+      <div className="relative mt-2">
         <input
-          className="w-full rounded-xl px-3 py-2 pr-11 text-sm border bg-white/5"
-          readOnly={readOnly}
+          className="input pr-11"
           value={value}
-          onChange={(e) => onChange?.(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           type={show ? "text" : "password"}
           autoComplete={autoComplete}
         />
@@ -119,12 +110,13 @@ function PasswordInput({
         <button
           type="button"
           onClick={() => setShow((v) => !v)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-lg border border-white/10 bg-white/5"
+          className="absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg border border-white/10 bg-white/[0.04] text-white/70 transition hover:bg-white/[0.08]"
+          aria-label={show ? "Ocultar contrasena" : "Mostrar contrasena"}
         >
           {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
       </div>
-    </div>
+    </label>
   );
 }
 
@@ -150,7 +142,12 @@ export default function SettingsPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  const [pwEditable, setPwEditable] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    old_password: "",
+    new_password: "",
+    confirm_password: "",
+  });
+  const [savingPassword, setSavingPassword] = useState(false);
 
   const isDirty = useMemo(() => {
     if (!profile) return false;
@@ -161,6 +158,11 @@ export default function SettingsPage() {
       form.email !== (profile.email || "")
     );
   }, [form, profile]);
+
+  const canSavePassword =
+    passwordForm.old_password.length > 0 &&
+    passwordForm.new_password.length > 0 &&
+    passwordForm.confirm_password.length > 0;
 
   async function saveProfile() {
     setSaving(true);
@@ -190,6 +192,38 @@ export default function SettingsPage() {
       setErr(getErrorMessage(e, "No se pudo actualizar el perfil."));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function savePassword() {
+    setErr(null);
+    setMsg(null);
+
+    if (passwordForm.new_password !== passwordForm.confirm_password) {
+      setErr("La nueva contrasena y la confirmacion no coinciden.");
+      return;
+    }
+
+    setSavingPassword(true);
+
+    try {
+      await apiRequest<{ detail: string }>("/api/profile/change-password/", {
+        method: "POST",
+        body: JSON.stringify({
+          old_password: passwordForm.old_password,
+          new_password: passwordForm.new_password,
+        }),
+      });
+      setPasswordForm({
+        old_password: "",
+        new_password: "",
+        confirm_password: "",
+      });
+      setMsg("Contrasena actualizada.");
+    } catch (e: unknown) {
+      setErr(getErrorMessage(e, "No se pudo actualizar la contrasena."));
+    } finally {
+      setSavingPassword(false);
     }
   }
 
@@ -230,31 +264,45 @@ export default function SettingsPage() {
     })();
   }, []);
 
-  if (loading) return <div className="p-6">Cargando...</div>;
+  if (loading) {
+    return (
+      <div className="panel p-6">
+        <div className="h-4 w-40 animate-pulse rounded bg-white/10" />
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="h-20 animate-pulse rounded-lg bg-white/[0.04]" />
+          <div className="h-20 animate-pulse rounded-lg bg-white/[0.04]" />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 px-4 sm:px-6 pb-10">
-      {/* HEADER */}
-      <div className="card p-4 sm:p-6 flex flex-col gap-4 sm:flex-row sm:justify-between">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-lg sm:text-xl font-semibold">Configuración</h1>
-          <p className="text-sm text-white/60">Perfil y seguridad</p>
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-amber-200/70">
+            Cuenta
+          </p>
+          <h2 className="mt-1 text-xl font-semibold text-white">Ajustes</h2>
+          <p className="mt-1 text-sm text-white/50">
+            Datos del usuario activo y seguridad de acceso.
+          </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <button
-            className="btn btn-secondary w-full sm:w-auto"
+            className="btn btn-secondary"
             onClick={resetProfileForm}
             disabled={!isDirty || saving}
           >
             Cancelar
           </button>
           <button
-            className="btn btn-primary w-full sm:w-auto"
+            className="btn btn-primary"
             onClick={saveProfile}
             disabled={!isDirty || saving}
           >
-            {saving ? "Guardando..." : "Guardar"}
+            {saving ? "Guardando..." : "Guardar perfil"}
           </button>
         </div>
       </div>
@@ -262,11 +310,15 @@ export default function SettingsPage() {
       {msg ? <Alert type="success" text={msg} /> : null}
       {err ? <Alert type="error" text={err} /> : null}
 
-      {/* PERFIL */}
-      <div className="card p-4 sm:p-6">
-        <h2 className="text-lg font-semibold">Perfil</h2>
+      <section className="panel overflow-hidden">
+        <div className="border-b border-white/10 p-4">
+          <h3 className="text-sm font-semibold text-white">Perfil</h3>
+          <p className="mt-0.5 text-xs text-white/45">
+            Edita solo los campos que necesites actualizar.
+          </p>
+        </div>
 
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid gap-4 p-4 sm:grid-cols-2">
           <EditableInput
             label="Usuario"
             value={form.username}
@@ -280,6 +332,7 @@ export default function SettingsPage() {
           <EditableInput
             label="Email"
             value={form.email}
+            type="email"
             editable={editable.email}
             onToggleEditable={() =>
               setEditable((s) => ({ ...s, email: !s.email }))
@@ -307,27 +360,82 @@ export default function SettingsPage() {
             onChange={(v) => setForm((s) => ({ ...s, last_name: v }))}
           />
         </div>
-      </div>
+      </section>
 
-      {/* SEGURIDAD */}
-      <div className="card p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row justify-between gap-3">
-          <h2 className="text-lg font-semibold">Seguridad</h2>
+      <section className="grid gap-4 lg:grid-cols-[1fr_360px]">
+        <div className="panel overflow-hidden">
+          <div className="border-b border-white/10 p-4">
+            <h3 className="text-sm font-semibold text-white">Seguridad</h3>
+            <p className="mt-0.5 text-xs text-white/45">
+              Cambia la contrasena usando la clave actual.
+            </p>
+          </div>
 
-          <button
-            className="btn btn-secondary w-full sm:w-auto"
-            onClick={() => setPwEditable((v) => !v)}
-          >
-            {pwEditable ? "Cancelar" : "Editar contraseña"}
-          </button>
+          <div className="grid gap-4 p-4 sm:grid-cols-3">
+            <PasswordInput
+              label="Actual"
+              value={passwordForm.old_password}
+              onChange={(value) =>
+                setPasswordForm((s) => ({ ...s, old_password: value }))
+              }
+              autoComplete="current-password"
+            />
+            <PasswordInput
+              label="Nueva"
+              value={passwordForm.new_password}
+              onChange={(value) =>
+                setPasswordForm((s) => ({ ...s, new_password: value }))
+              }
+              autoComplete="new-password"
+            />
+            <PasswordInput
+              label="Confirmar"
+              value={passwordForm.confirm_password}
+              onChange={(value) =>
+                setPasswordForm((s) => ({ ...s, confirm_password: value }))
+              }
+              autoComplete="new-password"
+            />
+          </div>
+
+          <div className="border-t border-white/10 p-4">
+            <button
+              className="btn btn-secondary w-full sm:w-auto"
+              onClick={savePassword}
+              disabled={!canSavePassword || savingPassword}
+            >
+              {savingPassword ? "Actualizando..." : "Actualizar contrasena"}
+            </button>
+          </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          <PasswordInput label="Actual" readOnly={!pwEditable} />
-          <PasswordInput label="Nueva" readOnly={!pwEditable} />
-          <PasswordInput label="Confirmar" readOnly={!pwEditable} />
-        </div>
-      </div>
+        <aside className="panel p-4">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-lg border border-amber-300/25 bg-amber-300/10">
+              <ShieldCheck className="h-5 w-5 text-amber-300" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-white">Permisos</h3>
+              <p className="text-xs text-white/45">Estado del usuario actual</p>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-2 text-sm">
+            <div className="flex justify-between gap-3 border-t border-white/10 pt-3">
+              <span className="text-white/50">Superuser</span>
+              <span className="text-white/85">{profile?.is_superuser ? "Si" : "No"}</span>
+            </div>
+            <div className="flex justify-between gap-3 border-t border-white/10 pt-3">
+              <span className="text-white/50">Staff</span>
+              <span className="text-white/85">{profile?.is_staff ? "Si" : "No"}</span>
+            </div>
+            <div className="flex justify-between gap-3 border-t border-white/10 pt-3">
+              <span className="text-white/50">Activo</span>
+              <span className="text-white/85">{profile?.is_active ? "Si" : "No"}</span>
+            </div>
+          </div>
+        </aside>
+      </section>
     </div>
   );
 }

@@ -1,23 +1,28 @@
-"use client"
+"use client";
 
-import { useEffect, useState, useRef } from "react"
-import { Portal } from "./Portal"
-import { updateClienteClient } from "@/lib/api/clients.client"
-import type { Cliente } from "@/types/orders"
-import { getErrorMessage } from "@/lib/api/http"
+import { forwardRef, useEffect, useRef, useState } from "react";
+import { X } from "lucide-react";
+import { Portal } from "./Portal";
+import { updateClienteClient } from "@/lib/api/clients.client";
+import type { Cliente } from "@/types/orders";
+import { getErrorMessage } from "@/lib/api/http";
 
 type Props = {
-  apiBaseUrl: string
-  client: Cliente
-  onClose: () => void
-  onUpdated: () => void
-}
+  apiBaseUrl: string;
+  client: Cliente;
+  onClose: () => void;
+  onUpdated: () => void;
+};
 
-export default function EditClientModal({ apiBaseUrl, client, onClose, onUpdated }: Props) {
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const firstInputRef = useRef<HTMLInputElement>(null)
+export default function EditClientModal({
+  apiBaseUrl,
+  client,
+  onClose,
+  onUpdated,
+}: Props) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const firstInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     nombre: client?.nombre || "",
@@ -26,143 +31,108 @@ export default function EditClientModal({ apiBaseUrl, client, onClose, onUpdated
     celular: client?.celular || "",
     email: client?.email || "",
     direccion: client?.direccion || "",
-  })
+  });
 
-  function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
-    setForm((p) => ({ ...p, [key]: value }))
-  }
-
-  // 🔥 autofocus + ESC + bloquear scroll
   useEffect(() => {
-    firstInputRef.current?.focus()
+    firstInputRef.current?.focus();
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !busy) onClose()
-    }
+      if (e.key === "Escape" && !busy) onClose();
+    };
 
-    document.addEventListener("keydown", onKey)
-    document.body.style.overflow = "hidden"
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKey);
 
     return () => {
-      document.removeEventListener("keydown", onKey)
-      document.body.style.overflow = ""
-    }
-  }, [busy, onClose])
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [busy, onClose]);
+
+  function set<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
+    setForm((p) => ({ ...p, [key]: value }));
+  }
 
   async function submit() {
-    setBusy(true)
-    setError(null)
+    setBusy(true);
+    setError(null);
 
     try {
-      await updateClienteClient(apiBaseUrl, client.id, form)
-
-      onUpdated()
-      onClose() // 🔥 UX clave: cerrar automáticamente
+      await updateClienteClient(apiBaseUrl, client.id, form);
+      onUpdated();
+      onClose();
     } catch (e: unknown) {
-      setError(getErrorMessage(e, "Error actualizando cliente"))
+      setError(getErrorMessage(e, "Error actualizando cliente"));
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
   }
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-[9999]">
-        {/* overlay */}
-        <div
-          className="absolute inset-0 bg-black/60 backdrop-blur-md"
-          onClick={() => !busy && onClose()}
-        />
+      <div className="modal-root">
+        <div className="modal-overlay" onClick={() => !busy && onClose()} />
 
-        {/* modal */}
-        <div
-          className="absolute left-1/2 top-1/2 w-[95vw] max-w-2xl -translate-x-1/2 -translate-y-1/2
-          rounded-2xl border border-white/15 bg-[#101827]
-          shadow-[0_20px_80px_rgba(0,0,0,0.65)]
-          max-h-[90vh] flex flex-col overflow-hidden"
-        >
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/5 to-transparent" />
+        <div className="modal-panel">
+          <div className="modal-drag" />
 
-          {/* header */}
-          <div className="relative p-5 border-b border-white/10">
+          <div className="modal-header">
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-white">
+              <div className="min-w-0">
+                <p className="text-xs font-medium uppercase tracking-[0.16em] text-amber-200/70">
+                  Cliente #{client.id}
+                </p>
+                <h2 className="mt-1 text-lg font-semibold text-white">
                   Editar cliente
                 </h2>
-                <p className="text-sm text-white/60">
-                  Cliente #{client.id}
+                <p className="mt-1 text-sm text-white/50">
+                  Actualiza contacto y datos de identificacion.
                 </p>
               </div>
 
               <button
+                type="button"
                 onClick={() => !busy && onClose()}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10"
+                className="modal-close"
+                aria-label="Cerrar"
               >
-                Cerrar
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            {error && (
-              <div className="mt-4 rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
+            {error ? (
+              <div className="mt-4 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
                 {error}
               </div>
-            )}
+            ) : null}
           </div>
 
-          {/* body */}
-          <div className="relative p-5 overflow-y-auto">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <input
+          <div className="modal-body">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Input
                 ref={firstInputRef}
-                placeholder="Nombre"
+                label="Nombre"
                 value={form.nombre}
-                onChange={(e) => set("nombre", e.target.value)}
-                className="input"
+                onChange={(v) => set("nombre", v)}
               />
-
-              <input
-                placeholder="Apellido"
-                value={form.apellido}
-                onChange={(e) => set("apellido", e.target.value)}
-                className="input"
-              />
-
-              <input
-                placeholder="DNI"
-                value={form.dni}
-                onChange={(e) => set("dni", e.target.value)}
-                className="input"
-              />
-
-              <input
-                placeholder="Celular"
-                value={form.celular}
-                onChange={(e) => set("celular", e.target.value)}
-                className="input"
-              />
-
-              <input
-                placeholder="Email"
-                value={form.email}
-                onChange={(e) => set("email", e.target.value)}
-                className="input md:col-span-2"
-              />
-
-              <input
-                placeholder="Dirección"
+              <Input label="Apellido" value={form.apellido} onChange={(v) => set("apellido", v)} />
+              <Input label="DNI" value={form.dni} onChange={(v) => set("dni", v)} />
+              <Input label="Celular" value={form.celular} onChange={(v) => set("celular", v)} />
+              <Input label="Email" value={form.email} onChange={(v) => set("email", v)} full />
+              <Input
+                label="Direccion"
                 value={form.direccion}
-                onChange={(e) => set("direccion", e.target.value)}
-                className="input md:col-span-2"
+                onChange={(v) => set("direccion", v)}
+                full
               />
             </div>
           </div>
 
-          {/* footer */}
-          <div className="relative p-4 md:p-5 border-t border-white/10 flex flex-col-reverse md:flex-row gap-2 md:justify-end">
+          <div className="modal-footer flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button
               onClick={() => !busy && onClose()}
-              className="w-full md:w-auto rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 hover:bg-white/10 disabled:opacity-40"
+              className="btn btn-secondary w-full sm:w-auto"
               disabled={busy}
             >
               Cancelar
@@ -170,17 +140,43 @@ export default function EditClientModal({ apiBaseUrl, client, onClose, onUpdated
 
             <button
               onClick={submit}
-              className="w-full md:w-auto rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/15 disabled:opacity-40 flex items-center justify-center gap-2"
+              className="btn btn-primary w-full gap-2 sm:w-auto"
               disabled={busy}
             >
-              {busy && (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-              )}
+              {busy ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+              ) : null}
               {busy ? "Guardando..." : "Guardar cambios"}
             </button>
           </div>
         </div>
       </div>
     </Portal>
-  )
+  );
 }
+
+const Input = forwardRef<HTMLInputElement, {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  full?: boolean;
+}>(function Input({
+  label,
+  value,
+  onChange,
+  full = false,
+}, ref) {
+  return (
+    <label className={full ? "sm:col-span-2" : undefined}>
+      <span className="field-label">{label}</span>
+      <input
+        ref={ref}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="input"
+      />
+    </label>
+  );
+});
+
+Input.displayName = "Input";

@@ -1,7 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { Eye, EyeOff, X } from "lucide-react";
+import { Eye, EyeOff, LockKeyhole, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -72,48 +72,41 @@ export function LoginModal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay
-          className="
-            fixed inset-0 bg-black/60 backdrop-blur-sm
-            data-[state=open]:animate-in data-[state=closed]:animate-out
-            data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0
-            duration-200
-          "
-        />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0" />
 
         <Dialog.Content
           aria-describedby="login-desc"
-          className="
-            fixed left-1/2 top-1/2 w-[92vw] max-w-md
-            -translate-x-1/2 -translate-y-1/2
-            data-[state=open]:animate-in data-[state=closed]:animate-out
-            data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0
-            data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95
-            duration-200
-            focus:outline-none
-          "
+          className="fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-[430px] -translate-x-1/2 -translate-y-1/2 focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
         >
-          <div className="card p-6">
-            <div className="flex items-center justify-between">
-              <Dialog.Title className="text-lg font-semibold">
-                Ingresar
-              </Dialog.Title>
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#101722] shadow-[0_26px_90px_rgba(0,0,0,0.62)]">
+            <div className="border-b border-white/8 bg-white/[0.025] px-5 py-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-amber-300/25 bg-amber-300/10 text-amber-200">
+                    <LockKeyhole className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <Dialog.Title className="text-base font-semibold text-white">
+                      Acceso interno
+                    </Dialog.Title>
+                    <Dialog.Description
+                      id="login-desc"
+                      className="mt-1 text-sm text-white/48"
+                    >
+                      Ingresá con tu usuario del taller.
+                    </Dialog.Description>
+                  </div>
+                </div>
 
-              <Dialog.Close className="rounded-lg border border-white/10 bg-white/5 p-2 hover:bg-white/8 transition">
-                <X className="h-4 w-4 text-white/80" />
-              </Dialog.Close>
+                <Dialog.Close className="rounded-lg border border-white/10 bg-white/[0.035] p-2 text-white/65 transition hover:bg-white/[0.07] hover:text-white">
+                  <X className="h-4 w-4" />
+                </Dialog.Close>
+              </div>
             </div>
 
-            <Dialog.Description
-              id="login-desc"
-              className="mt-2 text-sm text-white/65"
-            >
-              Acceso interno. No hay registro público.
-            </Dialog.Description>
-
-            <form onSubmit={handleSubmit} className="mt-5 space-y-3">
+            <form onSubmit={handleSubmit} className="space-y-4 px-5 py-5">
               <div>
-                <label className="text-xs text-white/70">
+                <label className="text-xs font-medium text-white/58">
                   Usuario / Email
                 </label>
                 <input
@@ -122,29 +115,34 @@ export function LoginModal({
                   required
                   disabled={loading}
                   autoComplete="username"
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/20 disabled:opacity-50"
-                  placeholder="usuario@necotec.com"
+                  className="mt-1.5 h-11 w-full rounded-lg border border-white/10 bg-black/20 px-3 text-sm text-white/90 outline-none transition placeholder:text-white/25 focus:border-amber-300/45 focus:bg-black/25 disabled:opacity-50"
+                  placeholder="usuario@servistech.com"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-white/70">Contraseña</label>
+                <label className="text-xs font-medium text-white/58">
+                  Contraseña
+                </label>
 
-                <div className="relative mt-1">
+                <div className="relative mt-1.5">
                   <input
                     name="password"
                     type={showPassword ? "text" : "password"}
                     required
                     disabled={loading}
                     autoComplete="current-password"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 pr-10 text-sm outline-none focus:border-white/20 disabled:opacity-50"
+                    className="h-11 w-full rounded-lg border border-white/10 bg-black/20 px-3 pr-11 text-sm text-white/90 outline-none transition placeholder:text-white/25 focus:border-amber-300/45 focus:bg-black/25 disabled:opacity-50"
                     placeholder="••••••••"
                   />
 
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-white/60 hover:text-white transition"
+                    className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white/50 transition hover:bg-white/[0.06] hover:text-white"
+                    aria-label={
+                      showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                    }
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -156,7 +154,7 @@ export function LoginModal({
               </div>
 
               {error ? (
-                <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                <div className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-sm text-red-200">
                   {error}
                 </div>
               ) : null}
@@ -164,13 +162,17 @@ export function LoginModal({
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/85 hover:bg-white/8 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-amber-300 px-4 text-sm font-semibold text-[#15100a] transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#15100a]/30 border-t-[#15100a]" />
                 ) : null}
-                {loading ? "Ingresando..." : "Entrar"}
+                {loading ? "Ingresando..." : "Entrar al panel"}
               </button>
+
+              <p className="text-center text-xs leading-5 text-white/38">
+                No hay registro público. El acceso se gestiona desde el backend.
+              </p>
             </form>
           </div>
         </Dialog.Content>

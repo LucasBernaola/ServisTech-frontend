@@ -99,9 +99,9 @@ export default async function SeguimientoPage({
   const fechaRetirado = data.fecha_retirado || null;
 
   return (
-    <div className="min-h-screen bg-[#0b0f16] text-white">
-      <div className="mx-auto w-full max-w-2xl px-3 py-5 sm:px-4 sm:py-8">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5">
+    <div className="min-h-screen necotec-bg text-white">
+      <div className="mx-auto w-full max-w-2xl px-4 py-5 sm:py-8">
+        <div className="panel overflow-hidden p-4 sm:p-5">
 
           {/* ── Header ── */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -135,19 +135,19 @@ export default async function SeguimientoPage({
           {/* ── Campos ── */}
           <div className="mt-4 sm:mt-5 grid gap-2.5 sm:gap-3">
 
-            <div className="rounded-xl border border-white/10 bg-black/30 p-3 sm:p-4">
+            <div className="rounded-lg border border-white/10 bg-black/25 p-3 sm:p-4">
               <div className="text-xs text-white/60">Cliente</div>
               <div className="mt-1 text-sm text-white/90">
                 {nombreCliente || "—"}
               </div>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-black/30 p-3 sm:p-4">
+            <div className="rounded-lg border border-white/10 bg-black/25 p-3 sm:p-4">
               <div className="text-xs text-white/60">Teléfono</div>
               <div className="mt-1 text-sm text-white/90">{celular || "—"}</div>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-black/30 p-3 sm:p-4">
+            <div className="rounded-lg border border-white/10 bg-black/25 p-3 sm:p-4">
               <div className="text-xs text-white/60">Equipo</div>
               <div className="mt-1 text-sm text-white/90">
                 {data.equipo?.dispositivo_tipo || "Equipo"}:{" "}
@@ -155,7 +155,7 @@ export default async function SeguimientoPage({
               </div>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-black/30 p-3 sm:p-4">
+            <div className="rounded-lg border border-white/10 bg-black/25 p-3 sm:p-4">
               <div className="text-xs text-white/60">Falla reportada</div>
               <div className="mt-1 whitespace-pre-wrap text-sm text-white/90">
                 {falla || "—"}
@@ -164,7 +164,7 @@ export default async function SeguimientoPage({
 
             {/* ── Bloque retiro ── */}
             {data.estado === "retirado" ? (
-              <div className="rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/5 p-3 sm:p-4">
+              <div className="rounded-lg border border-amber-300/25 bg-amber-300/8 p-3 sm:p-4">
                 <div className="text-xs text-white/60">Retiro del equipo</div>
 
                 <div className="mt-3 grid grid-cols-1 gap-2.5 sm:gap-3 sm:grid-cols-2">
@@ -204,7 +204,7 @@ export default async function SeguimientoPage({
             ) : null}
 
             {/* ── Progreso ── */}
-            <div className="rounded-xl border border-white/10 bg-black/30 p-3 sm:p-4">
+            <div className="rounded-lg border border-white/10 bg-black/25 p-3 sm:p-4">
               <div className="text-xs text-white/60">Progreso</div>
 
 
@@ -219,9 +219,9 @@ export default async function SeguimientoPage({
                         className={[
                           "flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium",
                           done
-                            ? "bg-yellow-400 text-black"
+                            ? "bg-amber-300 text-black"
                             : active
-                              ? "border border-yellow-400 bg-black/20 text-yellow-200"
+                              ? "border border-amber-300 bg-black/20 text-amber-100"
                               : "bg-black/30 text-white/60",
                         ].join(" ")}
                         title={s.label}
@@ -232,7 +232,7 @@ export default async function SeguimientoPage({
                         <div
                           className={[
                             "h-[2px] w-8 rounded",
-                            done ? "bg-yellow-400" : "bg-white/10",
+                            done ? "bg-amber-300" : "bg-white/10",
                           ].join(" ")}
                         />
                       ) : null}
@@ -253,9 +253,9 @@ export default async function SeguimientoPage({
                         className={[
                           "flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium",
                           done
-                            ? "bg-yellow-400 text-black"
+                            ? "bg-amber-300 text-black"
                             : active
-                              ? "border border-yellow-400 bg-black/20 text-yellow-200"
+                              ? "border border-amber-300 bg-black/20 text-amber-100"
                               : "bg-black/30 text-white/60",
                         ].join(" ")}
                       >

@@ -65,7 +65,7 @@ export function ClienteSearch({
   if (value) {
     const full = `${value.apellido} ${value.nombre}`.trim();
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+      <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <div className="truncate text-sm font-medium text-white/85">
@@ -80,7 +80,7 @@ export function ClienteSearch({
           <button
             type="button"
             onClick={onClear}
-            className="flex-shrink-0 rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-xs text-white/80 hover:bg-white/15 active:bg-white/20 transition-colors"
+            className="btn btn-secondary flex-shrink-0 px-3 py-2 text-xs"
           >
             Cambiar
           </button>
@@ -100,15 +100,15 @@ export function ClienteSearch({
         }}
         onFocus={() => setOpen(true)}
         placeholder="Buscar por DNI, apellido, nombre o celular..."
-        className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 sm:py-2 text-sm text-white/85 outline-none focus:border-white/20 placeholder:text-white/35"
+        className="input placeholder:text-white/35"
       />
 
       {open ? (
         <div
           className="
             absolute z-20 mt-2 w-full overflow-hidden
-            rounded-2xl border border-white/10
-            bg-[#0f172a]
+            rounded-xl border border-white/10
+            bg-[#111214]
             shadow-[0_20px_80px_rgba(0,0,0,0.55)]
           "
         >
@@ -143,7 +143,7 @@ export function ClienteSearch({
                       setQ("");
                     }}
                     // py-3 en mobile para área táctil más generosa
-                    className="w-full text-left px-3 py-3 sm:py-2 hover:bg-white/5 active:bg-white/10 transition-colors"
+                    className="w-full px-3 py-3 text-left transition-colors hover:bg-white/[0.05] active:bg-white/[0.08] sm:py-2"
                   >
                     <div className="text-sm text-white/85">
                       {full || `Cliente #${c.id}`}
