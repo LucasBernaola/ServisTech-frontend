@@ -1,7 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { X, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -19,11 +19,10 @@ export function LoginModal({
 
   const userRef = useRef<HTMLInputElement>(null);
 
-  // 🔥 autofocus cuando abre
   useEffect(() => {
-    if (open) {
-      setTimeout(() => userRef.current?.focus(), 50);
-    }
+    if (!open) return;
+    setError(null);
+    setTimeout(() => userRef.current?.focus(), 50);
   }, [open]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -46,18 +45,23 @@ export function LoginModal({
       });
 
       if (!res.ok) {
-        setError("Usuario o contraseña incorrectos.");
+        const data = await res.json().catch(() => null);
+        const message =
+          typeof data?.error === "string"
+            ? data.error
+            : res.status === 503
+              ? "No se pudo conectar con el backend."
+              : "Usuario o contraseña incorrectos.";
+        setError(message);
         return;
       }
 
       onOpenChange(false);
 
-      // 🔥 micro-delay para evitar corte visual del modal
       setTimeout(() => {
         router.push("/dashboard");
         router.refresh();
       }, 100);
-
     } catch {
       setError("Error de conexión con el servidor.");
     } finally {
@@ -90,7 +94,6 @@ export function LoginModal({
           "
         >
           <div className="card p-6">
-            {/* HEADER */}
             <div className="flex items-center justify-between">
               <Dialog.Title className="text-lg font-semibold">
                 Ingresar
@@ -108,7 +111,6 @@ export function LoginModal({
               Acceso interno. No hay registro público.
             </Dialog.Description>
 
-            {/* FORM */}
             <form onSubmit={handleSubmit} className="mt-5 space-y-3">
               <div>
                 <label className="text-xs text-white/70">
@@ -153,20 +155,20 @@ export function LoginModal({
                 </div>
               </div>
 
-              {error && (
+              {error ? (
                 <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-300">
                   {error}
                 </div>
-              )}
+              ) : null}
 
               <button
                 type="submit"
                 disabled={loading}
                 className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/85 hover:bg-white/8 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {loading && (
+                {loading ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                )}
+                ) : null}
                 {loading ? "Ingresando..." : "Entrar"}
               </button>
             </form>

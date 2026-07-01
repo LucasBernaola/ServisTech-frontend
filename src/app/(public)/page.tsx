@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LoginModal } from "@/components/LoginModal";
 import { useRouter } from "next/navigation";
+import { LoginModal } from "@/components/LoginModal";
 
 type SessionUser = {
   username?: string;
@@ -15,11 +15,25 @@ export default function PublicHome() {
   const router = useRouter();
 
   useEffect(() => {
+    let cancelled = false;
+
     async function checkSession() {
-      const res = await fetch("/api/auth/me", { credentials: "include" });
-      if (res.ok) setUser(await res.json());
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (!cancelled) setUser(data);
+      } catch {
+        if (!cancelled) setUser(null);
+      }
     }
+
     checkSession();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const services = [
@@ -29,11 +43,13 @@ export default function PublicHome() {
     "Limpieza y mantenimiento",
   ];
 
+  const adminUrl = process.env.NEXT_PUBLIC_API_URL
+    ? `${process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "")}/admin/`
+    : "/admin";
+
   return (
     <div className="min-h-screen necotec-bg">
       <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-10 min-h-screen flex flex-col">
-        
-        {/* TOP */}
         <div className="pt-6 sm:pt-8 flex justify-end">
           {user ? (
             <button
@@ -52,13 +68,9 @@ export default function PublicHome() {
           )}
         </div>
 
-        {/* CENTER */}
         <div className="flex-1 flex items-center justify-center">
           <div className="w-full flex flex-col items-center justify-center text-center">
-            
-            {/* Logo */}
             <div className="leading-none select-none flex flex-col w-fit text-center">
-              
               <div
                 className="text-4xl sm:text-6xl md:text-7xl lg:text-[8rem] xl:text-[9.5rem] font-extrabold tracking-tight text-transparent"
                 style={{
@@ -86,38 +98,35 @@ export default function PublicHome() {
               </div>
             </div>
 
-            {/* Servicios */}
             <div className="mt-6 sm:mt-8 w-full flex justify-center">
               <div className="max-w-5xl text-[11px] sm:text-sm md:text-base text-white/70">
                 <ul className="flex flex-wrap items-center justify-center gap-y-1 sm:gap-y-2">
-                  {services.map((s, i) => (
-                    <li key={s} className="flex items-center">
-                      <span>{s}</span>
-                      {i !== services.length - 1 && (
+                  {services.map((service, index) => (
+                    <li key={service} className="flex items-center">
+                      <span>{service}</span>
+                      {index !== services.length - 1 ? (
                         <span className="mx-2 sm:mx-3 text-white/30">-</span>
-                      )}
+                      ) : null}
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
 
-            {/* Usuario */}
-            {user && (
+            {user ? (
               <div className="mt-4 sm:mt-6 text-xs sm:text-sm text-white/60">
                 Hola,{" "}
                 <span className="text-white/85">
                   {user.username || user.email}
                 </span>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 
-        {/* BOTTOM */}
         <div className="pb-6 sm:pb-8 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0 text-center sm:text-left">
           <a
-            href="/admin"
+            href={adminUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-white/50 hover:text-white/80 transition"
@@ -125,9 +134,7 @@ export default function PublicHome() {
             Administración
           </a>
 
-          <div className="text-xs text-white/50">
-            © ServisTech - 2026
-          </div>
+          <div className="text-xs text-white/50">© ServisTech - 2026</div>
         </div>
 
         <LoginModal open={open} onOpenChange={setOpen} />

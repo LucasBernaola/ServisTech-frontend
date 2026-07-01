@@ -2,7 +2,7 @@
 
 import { CircleUserRound, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 type User = {
   username?: string;
@@ -17,34 +17,40 @@ export function Topbar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  /* ============================= */
-  /* FETCH USER                    */
-  /* ============================= */
-
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchUser() {
       try {
         const res = await fetch("/api/auth/me", {
           credentials: "include",
         });
 
-        if (!res.ok) throw new Error();
+        if (res.status === 401) {
+          router.replace("/");
+          return;
+        }
+
+        if (!res.ok) {
+          if (!cancelled) setUser(null);
+          return;
+        }
 
         const data = await res.json();
-        setUser(data);
+        if (!cancelled) setUser(data);
       } catch {
-        setUser(null);
+        if (!cancelled) setUser(null);
       } finally {
-        setLoadingUser(false);
+        if (!cancelled) setLoadingUser(false);
       }
     }
 
     fetchUser();
-  }, []);
 
-  /* ============================= */
-  /* LOGOUT                        */
-  /* ============================= */
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   async function handleLogout() {
     if (loggingOut) return;
@@ -56,19 +62,12 @@ export function Topbar() {
         method: "POST",
         credentials: "include",
       });
-
+    } finally {
       router.push("/");
       router.refresh();
-    } catch {
-      // opcional: toast
-    } finally {
       setLoggingOut(false);
     }
   }
-
-  /* ============================= */
-  /* PAGE TITLE                    */
-  /* ============================= */
 
   function getTitle() {
     if (pathname.startsWith("/orders")) return "Órdenes";
@@ -79,16 +78,9 @@ export function Topbar() {
 
   return (
     <div className="flex items-center justify-between border-b border-white/10 px-5 py-4 md:px-6">
-      
-      {/* TITLE */}
-      <div className="text-sm font-medium text-white/70">
-        {getTitle()}
-      </div>
+      <div className="text-sm font-medium text-white/70">{getTitle()}</div>
 
-      {/* RIGHT */}
       <div className="flex items-center gap-3">
-        
-        {/* USER */}
         {loadingUser ? (
           <div className="h-4 w-24 animate-pulse rounded bg-white/10" />
         ) : user ? (
@@ -98,15 +90,14 @@ export function Topbar() {
           </div>
         ) : null}
 
-        {/* LOGOUT */}
         <button
           onClick={handleLogout}
           disabled={loggingOut}
           className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 transition hover:bg-white/8 disabled:opacity-50"
         >
-          {loggingOut && (
+          {loggingOut ? (
             <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-          )}
+          ) : null}
 
           <LogOut className="h-3.5 w-3.5" />
           {loggingOut ? "Saliendo..." : "Cerrar sesión"}

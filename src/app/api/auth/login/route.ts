@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { parseApiResponse } from "@/lib/api/http";
+import { ApiError, parseApiResponse } from "@/lib/api/http";
 import { getDjangoApiUrl } from "@/lib/config";
 
 type HeadersWithSetCookie = Headers & {
@@ -15,14 +15,27 @@ function rewriteCookieForFrontend(cookie: string) {
 }
 
 export async function POST(req: Request) {
-  const body = await req.json();
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Solicitud invalida" }, { status: 400 });
+  }
 
-  const djangoRes = await fetch(`${getDjangoApiUrl()}/token/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
+  let djangoRes: Response;
+  try {
+    djangoRes = await fetch(`${getDjangoApiUrl()}/token/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+  } catch {
+    return NextResponse.json(
+      { error: "No se pudo conectar con el backend" },
+      { status: 503 },
+    );
+  }
 
   let data: unknown;
   try {
@@ -30,7 +43,8 @@ export async function POST(req: Request) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Credenciales invalidas";
-    return NextResponse.json({ error: message }, { status: 401 });
+    const status = error instanceof ApiError ? error.status : 401;
+    return NextResponse.json({ error: message }, { status });
   }
 
   const headers = djangoRes.headers as HeadersWithSetCookie;

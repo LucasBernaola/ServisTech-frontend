@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { parseApiResponse } from "@/lib/api/http";
+import { ApiError, parseApiResponse } from "@/lib/api/http";
 import { apiUrl } from "@/lib/config";
 
 export async function GET() {
@@ -11,18 +11,31 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const res = await fetch(apiUrl("/api/profile/"), {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${access}`,
-    },
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(apiUrl("/api/profile/"), {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${access}`,
+      },
+      cache: "no-store",
+    });
+  } catch {
+    return NextResponse.json(
+      { error: "No se pudo conectar con el backend" },
+      { status: 503 },
+    );
+  }
 
   try {
     const data = await parseApiResponse<unknown>(res);
     return NextResponse.json(data);
-  } catch {
-    return NextResponse.json({ error: "Token invalido" }, { status: 401 });
+  } catch (error) {
+    const status = error instanceof ApiError ? error.status : 401;
+    const message =
+      status === 401 || status === 403
+        ? "Token invalido"
+        : "No se pudo validar la sesion";
+    return NextResponse.json({ error: message }, { status });
   }
 }
