@@ -1,6 +1,6 @@
 import { apiRequest } from "@/lib/api/http";
 import type { CreateOrdenInput } from "@/lib/api/orders";
-import type { Orden } from "@/types/orders";
+import type { Orden, OrdenEstado } from "@/types/orders";
 
 export async function createOrdenClient(
   apiBaseUrl: string,
@@ -46,6 +46,19 @@ export async function patchOrdenClient(
     apiBaseUrl,
     method: "PATCH",
     body: JSON.stringify(data),
+  });
+}
+
+export async function patchOrdenEstadoClient(opts: {
+  apiBaseUrl: string;
+  id: number;
+  estado: OrdenEstado;
+  payload?: Record<string, unknown>;
+}) {
+  return apiRequest<unknown>(`/api/ordenes/${opts.id}/estado/`, {
+    apiBaseUrl: opts.apiBaseUrl,
+    method: "PATCH",
+    body: JSON.stringify({ estado: opts.estado, ...(opts.payload || {}) }),
   });
 }
 

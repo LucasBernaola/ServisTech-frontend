@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useRef } from "react"
 import { Portal } from "./Portal"
+import { updateClienteClient } from "@/lib/api/clients.client"
 import type { Cliente } from "@/types/orders"
-import { apiRequest, getErrorMessage } from "@/lib/api/http"
+import { getErrorMessage } from "@/lib/api/http"
 
 type Props = {
   apiBaseUrl: string
@@ -53,11 +54,7 @@ export default function EditClientModal({ apiBaseUrl, client, onClose, onUpdated
     setError(null)
 
     try {
-      await apiRequest(`/api/clientes/${client.id}/`, {
-        apiBaseUrl,
-        method: "PATCH",
-        body: JSON.stringify(form),
-      })
+      await updateClienteClient(apiBaseUrl, client.id, form)
 
       onUpdated()
       onClose() // 🔥 UX clave: cerrar automáticamente

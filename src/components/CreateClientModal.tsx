@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { Portal } from "./Portal"
-import { apiRequest, getErrorMessage } from "@/lib/api/http"
+import { createClienteClient } from "@/lib/api/clients.client"
+import { getErrorMessage } from "@/lib/api/http"
 
 type Props = {
   apiBaseUrl: string
@@ -31,11 +32,7 @@ export default function CreateClientModal({ apiBaseUrl, onClose, onCreated }: Pr
     setBusy(true)
     setError(null)
     try {
-      await apiRequest("/api/clientes/", {
-        apiBaseUrl,
-        method: "POST",
-        body: JSON.stringify(form),
-      })
+      await createClienteClient(apiBaseUrl, form)
 
       onCreated()
     } catch (e: unknown) {

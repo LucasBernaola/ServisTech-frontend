@@ -1,14 +1,15 @@
 import { apiRequest } from "@/lib/api/http";
+import type { Cliente } from "@/types/orders";
 
-export type Cliente = {
-  id: number;
+export type { Cliente };
+
+export type ClienteInput = {
   nombre: string;
   apellido: string;
   dni: string;
   email: string;
   celular: string;
-  created_at?: string;
-  updated_at?: string;
+  direccion?: string;
 };
 
 type Paginated<T> =
@@ -37,4 +38,27 @@ export async function searchClientesClient(opts: {
   );
 
   return Array.isArray(data) ? data : data.results;
+}
+
+export async function createClienteClient(
+  apiBaseUrl: string,
+  data: ClienteInput,
+) {
+  return apiRequest<Cliente>("/api/clientes/", {
+    apiBaseUrl,
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateClienteClient(
+  apiBaseUrl: string,
+  clienteId: number,
+  data: ClienteInput,
+) {
+  return apiRequest<Cliente>(`/api/clientes/${clienteId}/`, {
+    apiBaseUrl,
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
 }

@@ -4,10 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ClientsTable from "@/components/ClientsTable";
 import CreateClientModal from "@/components/CreateClientModal";
-import { apiRequest } from "@/lib/api/http";
+import { searchClientesClient } from "@/lib/api/clients.client";
 import type { Cliente } from "@/types/orders";
-
-type ClientesResponse = { results: Cliente[] } | Cliente[];
 
 function isDigitsOnly(s: string) {
   const t = s.trim();
@@ -115,17 +113,12 @@ export default function ClientsClient({
     const t = setTimeout(async () => {
       try {
         setSugLoading(true);
-        const data = await apiRequest<ClientesResponse>(
-          `/api/clientes/?search=${encodeURIComponent(q)}`,
-          {
-            apiBaseUrl,
-            cache: "no-store",
-          },
-        );
-        const items: Cliente[] = Array.isArray(data)
-          ? data
-          : data?.results || [];
-        setSuggestions(items.slice(0, 7));
+        const items = await searchClientesClient({
+          apiBaseUrl,
+          q,
+          pageSize: 7,
+        });
+        setSuggestions(items);
         setOpenSug(true);
       } catch {
         setSuggestions([]);
