@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
+import { printFichaUrl, seguimientoPublicUrl } from "@/lib/api/orders.client";
 import { getOrderStatusPillClasses } from "@/lib/orders/status";
 import type { Orden, OrdenEstado } from "@/types/orders";
 import { OrderStatusWizardModal } from "./orders/OrderStatusWizardModal";
@@ -108,7 +109,7 @@ export function OrdersTable({
       {!apiBaseUrl ? (
         <div className="mb-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
           Nota: faltó <b>apiBaseUrl</b> en esta vista. Se deshabilita el cambio
-          de estado y los links de impresión.
+          de estado.
         </div>
       ) : null}
 
@@ -202,29 +203,25 @@ export function OrdersTable({
                         Ver
                       </button>
 
-                      {apiBaseUrl ? (
-                        <>
-                          <a
-                            onClick={(e) => e.stopPropagation()}
-                            href={`${apiBaseUrl}/api/ordenes/${o.id}/print/ficha-tecnica/`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 transition hover:bg-white/8"
-                          >
-                            Ficha
-                          </a>
+                      <a
+                        onClick={(e) => e.stopPropagation()}
+                        href={printFichaUrl(o.id)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 transition hover:bg-white/8"
+                      >
+                        Ficha
+                      </a>
 
-                          <a
-                            onClick={(e) => e.stopPropagation()}
-                            href={`/seguimiento/${o.public_token}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 transition hover:bg-white/8"
-                          >
-                            Seguimiento
-                          </a>
-                        </>
-                      ) : null}
+                      <a
+                        onClick={(e) => e.stopPropagation()}
+                        href={seguimientoPublicUrl(o.public_token)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 transition hover:bg-white/8"
+                      >
+                        Seguimiento
+                      </a>
                     </div>
                   </td>
                 </tr>
@@ -291,28 +288,24 @@ export function OrdersTable({
                     Ver detalles
                   </button>
 
-                  {apiBaseUrl && (
-                    <>
-                      <a
-                        onClick={(e) => e.stopPropagation()}
-                        href={`${apiBaseUrl}/api/ordenes/${o.id}/print/ficha-tecnica/`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex-1 text-center cursor-pointer rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white/80 transition hover:bg-white/8"
-                      >
-                        Ficha
-                      </a>
-                      <a
-                        onClick={(e) => e.stopPropagation()}
-                        href={`/seguimiento/${o.public_token}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex-1 text-center cursor-pointer rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white/80 transition hover:bg-white/8"
-                      >
-                        Seguimiento
-                      </a>
-                    </>
-                  )}
+                  <a
+                    onClick={(e) => e.stopPropagation()}
+                    href={printFichaUrl(o.id)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 text-center cursor-pointer rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white/80 transition hover:bg-white/8"
+                  >
+                    Ficha
+                  </a>
+                  <a
+                    onClick={(e) => e.stopPropagation()}
+                    href={seguimientoPublicUrl(o.public_token)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 text-center cursor-pointer rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white/80 transition hover:bg-white/8"
+                  >
+                    Seguimiento
+                  </a>
                 </div>
               </div>
             );

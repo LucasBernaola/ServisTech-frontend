@@ -62,10 +62,14 @@ export async function patchOrdenEstadoClient(opts: {
   });
 }
 
-export function printSeguimientoUrl(_apiBaseUrl: string, ordenId: number) {
+export function printOrdenUrl(ordenId: number) {
   return `/imprimir/orden/${ordenId}`;
 }
 
-export function printFichaUrl(_apiBaseUrl: string, ordenId: number) {
+export function printFichaUrl(ordenId: number) {
   return `/imprimir/ficha/${ordenId}`;
+}
+
+export function seguimientoPublicUrl(publicToken: string) {
+  return `/seguimiento/${publicToken}`;
 }

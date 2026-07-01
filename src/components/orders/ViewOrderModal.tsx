@@ -20,7 +20,7 @@ import type { CreateOrdenInput } from "@/lib/api/orders";
 import {
   getOrdenClient,
   patchOrdenClient,
-  printSeguimientoUrl,
+  printOrdenUrl,
   printFichaUrl,
   uploadOrdenFotosClient,
 } from "@/lib/api/orders.client";
@@ -192,22 +192,14 @@ export function ViewOrderModal({
 
   if (!open) return null;
 
-  const onPrintCliente = () => {
+  const onPrintOrden = () => {
     if (!ordenId) return;
-    window.open(
-      printSeguimientoUrl(apiBaseUrl, ordenId),
-      "_blank",
-      "noopener,noreferrer",
-    );
+    window.open(printOrdenUrl(ordenId), "_blank", "noopener,noreferrer");
   };
 
   const onPrintFicha = () => {
     if (!ordenId) return;
-    window.open(
-      printFichaUrl(apiBaseUrl, ordenId),
-      "_blank",
-      "noopener,noreferrer",
-    );
+    window.open(printFichaUrl(ordenId), "_blank", "noopener,noreferrer");
   };
 
   const submit = async () => {
@@ -323,7 +315,7 @@ export function ViewOrderModal({
             {/* Botones de impresión: en mobile van en fila debajo del título */}
             <div className="mt-2.5 flex gap-2">
               <button
-                onClick={onPrintCliente}
+                onClick={onPrintOrden}
                 disabled={busy || loading || !ordenId}
                 className="flex-1 sm:flex-none rounded-lg border border-white/10 bg-white/10 px-3 py-2 sm:py-1.5 text-xs text-white/90 hover:bg-white/15 active:bg-white/20 disabled:opacity-40 transition-colors"
               >
