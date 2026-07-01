@@ -10,19 +10,18 @@ import {
   formatArsInput,
   parseArsToNumberOrNull,
 } from "@/lib/orders/money";
+import {
+  getOrderStatusIndex,
+  getOrderStatusPillClasses,
+  ORDER_STATUSES,
+} from "@/lib/orders/status";
+import {
+  calculateWarrantyDiscount,
+  validateOrderStatusPayload,
+  type WarrantyDiscountType,
+} from "@/lib/orders/statusValidation";
 import type { Orden, OrdenEstado } from "@/types/orders";
 import { ViewOrderModal } from "./orders/ViewOrderModal";
-
-const ESTADOS: { value: OrdenEstado; label: string }[] = [
-  { value: "pendiente", label: "Pendiente" },
-  { value: "diagnosticado", label: "Diagnosticado" },
-  { value: "en_progreso", label: "En progreso" },
-  { value: "reparado", label: "Reparado" },
-  { value: "finalizado", label: "Finalizado" },
-  { value: "retirado", label: "Retirado" },
-];
-
-type GarantiaTipo = "monto" | "porcentaje";
 
 const darkSelectStyle: CSSProperties = { colorScheme: "dark" };
 
@@ -39,30 +38,6 @@ function formatDate(iso: string | null | undefined) {
 
 function moneyFmt(n: number) {
   return formatArsDisplay(n);
-}
-
-function estadoIndex(estado: OrdenEstado) {
-  const idx = ESTADOS.findIndex((s) => s.value === estado);
-  return idx >= 0 ? idx : 0;
-}
-
-function estadoPillClasses(estado: OrdenEstado) {
-  switch (estado) {
-    case "pendiente":
-      return "border-sky-500/25 bg-sky-500/10 text-sky-100";
-    case "diagnosticado":
-      return "border-indigo-500/25 bg-indigo-500/10 text-indigo-100";
-    case "en_progreso":
-      return "border-amber-500/25 bg-amber-500/10 text-amber-100";
-    case "reparado":
-      return "border-emerald-500/25 bg-emerald-500/10 text-emerald-100";
-    case "finalizado":
-      return "border-cyan-500/25 bg-cyan-500/10 text-cyan-100";
-    case "retirado":
-      return "border-fuchsia-500/25 bg-fuchsia-500/10 text-fuchsia-100";
-    default:
-      return "border-white/10 bg-white/5 text-white/80";
-  }
 }
 
 async function patchOrdenEstado(opts: {
@@ -104,7 +79,7 @@ function EstadoPillButton({
         "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition",
         "focus:outline-none focus:ring-2 focus:ring-white/10",
         "cursor-pointer disabled:cursor-not-allowed disabled:opacity-50",
-        estadoPillClasses(value),
+        getOrderStatusPillClasses(value),
       ].join(" ")}
       title="Cambiar estado"
     >
@@ -134,7 +109,7 @@ function Stepper({
 }) {
   return (
     <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start">
-      {ESTADOS.map((s, i) => {
+      {ORDER_STATUSES.map((s, i) => {
         const done = i < currentIndex;
         const active = i === activeIndex;
 
@@ -153,7 +128,7 @@ function Stepper({
               {done ? "✓" : i + 1}
             </div>
 
-            {i < ESTADOS.length - 1 ? (
+            {i < ORDER_STATUSES.length - 1 ? (
               <div
                 className={[
                   "h-[2px] w-6 sm:w-8 rounded flex-shrink-0",
@@ -239,7 +214,7 @@ function OrderStatusWizardModal({
 
   const [garantiaDescuento, setGarantiaDescuento] = React.useState<string>("0");
   const [garantiaTipo, setGarantiaTipo] =
-    React.useState<GarantiaTipo>("monto");
+    React.useState<WarrantyDiscountType>("monto");
   const [garantiaPorcentaje, setGarantiaPorcentaje] =
     React.useState<string>("0");
 
@@ -258,7 +233,7 @@ function OrderStatusWizardModal({
     setRollbackMode(false);
     setConfirmRollback(false);
 
-    const idx = estadoIndex(orden.estado);
+    const idx = getOrderStatusIndex(orden.estado);
     setCurrentIndex(idx);
     setStep(idx);
 
@@ -294,11 +269,11 @@ function OrderStatusWizardModal({
 
   if (!open) return null;
 
-  const activeEstado = ESTADOS[step]?.value ?? "pendiente";
-  const activeLabel = ESTADOS[step]?.label ?? "Pendiente";
+  const activeEstado = ORDER_STATUSES[step]?.value ?? "pendiente";
+  const activeLabel = ORDER_STATUSES[step]?.label ?? "Pendiente";
 
   const canBack = step > 0;
-  const canContinue = step < ESTADOS.length - 1;
+  const canContinue = step < ORDER_STATUSES.length - 1;
 
   const isNextStepToApply = !rollbackMode && step === currentIndex + 1;
   const rollbackTargetIndex = Math.max(0, currentIndex - 1);
@@ -309,19 +284,12 @@ function OrderStatusWizardModal({
     return Math.max(0, p - s);
   })();
 
-  const garantiaDescuentoReal = (() => {
-    const c = parseArsToNumberOrNull(costoFinal);
-    if (c === null) return null;
-
-    if (garantiaTipo === "porcentaje") {
-      const pct = parseArsToNumberOrNull(garantiaPorcentaje) ?? 0;
-      const raw = (c * pct) / 100;
-      return Math.max(0, Math.min(c, raw));
-    }
-
-    const gd = parseArsToNumberOrNull(garantiaDescuento) ?? 0;
-    return Math.max(0, Math.min(c, gd));
-  })();
+  const garantiaDescuentoReal = calculateWarrantyDiscount({
+    costoFinal,
+    garantiaTipo,
+    garantiaDescuento,
+    garantiaPorcentaje,
+  });
 
   const cobroFinalPreview = (() => {
     const c = parseArsToNumberOrNull(costoFinal);
@@ -349,85 +317,20 @@ function OrderStatusWizardModal({
   const validatePayloadFor = (estado: OrdenEstado) => {
     setError(null);
 
-    if (estado === "diagnosticado") {
-      const p = parseArsToNumberOrNull(presupuesto);
-      if (p === null || p <= 0) {
-        return {
-          ok: false,
-          msg: "Para 'diagnosticado' se requiere presupuesto.",
-        };
-      }
-
-      const s = parseArsToNumberOrNull(senia);
-      if (s !== null && s < 0)
-        return { ok: false, msg: "La seña no puede ser negativa." };
-      if (s !== null && s > p)
-        return { ok: false, msg: "La seña no puede ser mayor al presupuesto." };
-
-      return { ok: true, payload: { presupuesto: p, senia: s } };
-    }
-
-    if (estado === "finalizado") {
-      const c = parseArsToNumberOrNull(costoFinal);
-      if (c === null)
-        return { ok: false, msg: "Para 'finalizado' se requiere Costo final." };
-      if (c < 0)
-        return { ok: false, msg: "El Costo final no puede ser negativo." };
-
-      const desc = garantiaDescuentoReal ?? 0;
-      if (desc < 0)
-        return {
-          ok: false,
-          msg: "El Descuento garantía no puede ser negativo.",
-        };
-      if (desc > c)
-        return {
-          ok: false,
-          msg: "El Descuento garantía no puede ser mayor que el Costo final.",
-        };
-
-      const dias = Number(String(garantiaDias ?? "0").trim());
-      if (!Number.isFinite(dias) || dias < 0) {
-        return {
-          ok: false,
-          msg: "Los días de garantía no pueden ser negativos.",
-        };
-      }
-
-      return {
-        ok: true,
-        payload: {
-          costo_final: c,
-          garantia_descuento: desc,
-          garantia_dias: Math.floor(dias),
-          observaciones_finales: obsFinales || "",
-        },
-      };
-    }
-
-    if (estado === "retirado") {
-      const nombre = retiradoPorNombre.trim();
-      const dni = retiradoPorDni.trim();
-      const obs = observacionesRetiro.trim();
-
-      if (!nombre) {
-        return {
-          ok: false,
-          msg: "Para 'retirado' se requiere el nombre de quien retira.",
-        };
-      }
-
-      return {
-        ok: true,
-        payload: {
-          retirado_por_nombre: nombre,
-          retirado_por_dni: dni,
-          observaciones_retiro: obs,
-        },
-      };
-    }
-
-    return { ok: true, payload: {} };
+    return validateOrderStatusPayload({
+      estado,
+      presupuesto,
+      senia,
+      costoFinal,
+      garantiaDescuento,
+      garantiaTipo,
+      garantiaPorcentaje,
+      garantiaDias,
+      obsFinales,
+      retiradoPorNombre,
+      retiradoPorDni,
+      observacionesRetiro,
+    });
   };
 
   const applyStep = async () => {
@@ -580,7 +483,7 @@ function OrderStatusWizardModal({
                 <select
                   value={garantiaTipo}
                   onChange={(e) =>
-                    setGarantiaTipo(e.target.value as GarantiaTipo)
+                    setGarantiaTipo(e.target.value as WarrantyDiscountType)
                   }
                   className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/85 outline-none focus:border-white/20"
                   style={darkSelectStyle}
@@ -785,7 +688,8 @@ function OrderStatusWizardModal({
     : isNextStepToApply
       ? applyStep
       : () => {
-          if (canContinue) setStep((s) => Math.min(ESTADOS.length - 1, s + 1));
+          if (canContinue)
+            setStep((s) => Math.min(ORDER_STATUSES.length - 1, s + 1));
         };
 
   return (
@@ -805,7 +709,7 @@ function OrderStatusWizardModal({
                 <span
                   className={[
                     "ml-2 inline-flex rounded-full border px-2 py-0.5 text-xs",
-                    estadoPillClasses(activeEstado),
+                    getOrderStatusPillClasses(activeEstado),
                   ].join(" ")}
                 >
                   {activeLabel}
