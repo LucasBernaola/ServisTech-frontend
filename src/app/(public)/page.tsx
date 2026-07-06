@@ -30,7 +30,7 @@ const modules = [
   },
   {
     title: "Seguimiento público",
-    description: "Consulta externa por token para ver el avance del equipo.",
+    description: "Consulta externa por URL para ver el avance del equipo.",
     icon: ShieldCheck,
   },
   {
@@ -135,17 +135,16 @@ export default function PublicHome() {
           <section className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/60">
               <Smartphone className="h-3.5 w-3.5 text-amber-200" />
-              Sistema de gestión para reparaciones técnicas
+              Menos planillas. Más control.
             </div>
 
             <h1 className="mt-6 max-w-3xl text-5xl font-black leading-[0.95] tracking-normal text-white sm:text-6xl lg:text-7xl">
-              Controlá tu taller sin perder el ritmo del banco de trabajo.
+              Gestión simple para talleres de reparación técnica.
             </h1>
 
             <p className="mt-6 max-w-2xl text-base leading-7 text-white/62 sm:text-lg">
-              ServisTech organiza órdenes, clientes, estados de reparación,
-              fichas imprimibles y seguimiento público en una interfaz pensada
-              para el día a día de un servicio técnico.
+              ServisTech ayuda a ordenar la gestión diaria del taller con una
+              experiencia clara, rápida y fácil de usar para todo el equipo.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -157,15 +156,6 @@ export default function PublicHome() {
                 {user ? "Abrir panel" : "Acceder al sistema"}
                 <ArrowRight className="h-4 w-4" />
               </button>
-
-              <a
-                href={adminUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-11 items-center justify-center rounded-lg border border-white/12 bg-white/[0.035] px-5 text-sm font-medium text-white/75 transition hover:border-white/22 hover:bg-white/[0.06] hover:text-white"
-              >
-                Admin Django
-              </a>
             </div>
 
             {user ? (
@@ -236,7 +226,6 @@ export default function PublicHome() {
 
         <footer className="flex flex-col items-center justify-between gap-3 border-t border-white/8 py-5 text-xs text-white/42 sm:flex-row">
           <span>© ServisTech - 2026</span>
-          <span>Órdenes, clientes y seguimiento técnico en un solo panel.</span>
         </footer>
 
         <LoginModal open={open} onOpenChange={setOpen} />
