@@ -170,9 +170,6 @@ export function LoginModal({
                 {loading ? "Ingresando..." : "Entrar al panel"}
               </button>
 
-              <p className="text-center text-xs leading-5 text-white/38">
-                No hay registro público. El acceso se gestiona desde el backend.
-              </p>
             </form>
           </div>
         </Dialog.Content>
