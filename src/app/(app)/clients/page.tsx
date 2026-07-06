@@ -2,7 +2,7 @@ import ClientsClient from "./ClientsClient";
 import { getClientes } from "@/lib/api/clients";
 import { getApiBaseUrl } from "@/lib/config";
 
-const API_BASE_URL = getApiBaseUrl();
+export const dynamic = "force-dynamic";
 
 export default async function ClientsPage({
   searchParams,
@@ -11,10 +11,11 @@ export default async function ClientsPage({
 }) {
   const sp = await searchParams;
   const data = await getClientes(sp);
+  const apiBaseUrl = getApiBaseUrl();
 
   return (
     <ClientsClient
-      apiBaseUrl={API_BASE_URL}
+      apiBaseUrl={apiBaseUrl}
       initialData={data}
       initialSearch={sp.search || ""}
       initialPage={Number(sp.page || 1)}

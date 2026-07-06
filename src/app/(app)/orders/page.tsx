@@ -4,7 +4,7 @@ import { getOrdenes } from "@/lib/api/orders";
 import { OrdersClient } from "./OrdersClient";
 import { OrdersToolbar } from "./OrdersToolbar";
 
-const API_BASE_URL = getApiBaseUrl();
+export const dynamic = "force-dynamic";
 
 export default async function OrdersPage({
   searchParams,
@@ -22,6 +22,7 @@ export default async function OrdersPage({
   const search = sp.search ?? "";
 
   const data = await getOrdenes({ page, tab, search });
+  const apiBaseUrl = getApiBaseUrl();
 
   return (
     <div className="space-y-4">
@@ -36,7 +37,7 @@ export default async function OrdersPage({
           </p>
         </div>
 
-        <OrdersToolbar apiBaseUrl={API_BASE_URL} />
+        <OrdersToolbar apiBaseUrl={apiBaseUrl} />
       </div>
 
       <section className="panel overflow-hidden">
@@ -51,7 +52,7 @@ export default async function OrdersPage({
         </div>
 
         <div className="overflow-x-auto">
-          <OrdersTable rows={data.results} apiBaseUrl={API_BASE_URL} />
+          <OrdersTable rows={data.results} apiBaseUrl={apiBaseUrl} />
         </div>
       </section>
     </div>

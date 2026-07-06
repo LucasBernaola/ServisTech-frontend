@@ -5,7 +5,7 @@ import { getOrdenesRecent } from "@/lib/api/orders";
 import { getApiBaseUrl } from "@/lib/config";
 import { ClipboardList, Users, Wrench } from "lucide-react";
 
-const API_BASE_URL = getApiBaseUrl();
+export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const [ordenes, clientes] = await Promise.all([
@@ -15,6 +15,7 @@ export default async function DashboardPage() {
 
   const ordenesRows = ordenes.results || [];
   const clientesRows = clientes.results || [];
+  const apiBaseUrl = getApiBaseUrl();
 
   return (
     <div className="space-y-5">
@@ -67,7 +68,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="overflow-x-auto">
-          <OrdersTable apiBaseUrl={API_BASE_URL} rows={ordenesRows} />
+          <OrdersTable apiBaseUrl={apiBaseUrl} rows={ordenesRows} />
         </div>
       </section>
 
